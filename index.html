@@ -1,444 +1,392 @@
 <html lang="zh-HK">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>計劃書回報分析</title>
-<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<style>
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>計劃書回報分析</title>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <style>
   :root{--navy:#0f172a;--navy2:#1e293b;--gold:#d97706;--gold2:#f59e0b;--soft:#fffbeb;--line:#e2e8f0;--mut:#64748b;--bg:#f1f5f9;--red:#dc2626}
   *{box-sizing:border-box}
   body{margin:0;font-family:-apple-system,"PingFang HK","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--navy);-webkit-font-smoothing:antialiased}
-  header{background:radial-gradient(circle at 85% 0%,#334155 0%,transparent 55%),linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:40px 20px 70px}
+  header{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:36px 20px 64px}
   .hd{max-width:1100px;margin:0 auto}
-  .eyebrow{display:inline-block;font-size:12px;letter-spacing:2px;color:var(--gold2);border:1px solid rgba(245,158,11,.5);border-radius:999px;padding:4px 12px;margin-bottom:14px}
-  header h1{margin:0 0 8px;font-size:30px;letter-spacing:1px}
+  header h1{margin:0 0 6px;font-size:28px}
   header p{margin:0;color:#cbd5e1;font-size:13px}
-  main{max-width:1100px;margin:-44px auto 0;padding:0 16px 20px}
-  section{background:#fff;border-radius:18px;padding:22px;margin-bottom:20px;box-shadow:0 10px 30px rgba(15,23,42,.07);border:1px solid rgba(226,232,240,.8)}
-  section.res{border-top:4px solid var(--gold2)}
+  main{max-width:1100px;margin:-40px auto 0;padding:0 14px 40px}
+  section{background:#fff;border-radius:18px;padding:20px;margin-bottom:18px;box-shadow:0 4px 16px rgba(15,23,42,.06)}
   h2{margin:0 0 14px;font-size:18px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin-bottom:16px}
-  label{font-size:12px;color:var(--mut);font-weight:600;display:block;margin-bottom:5px}
-  input[type=text],select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:#f8fafc;color:var(--navy)}
-  input[type=text]:focus,select:focus,textarea:focus{outline:0;border-color:var(--gold2);background:#fff;box-shadow:0 0 0 3px rgba(245,158,11,.18)}
-  textarea{height:200px;font-family:Menlo,Consolas,monospace;font-size:12px}
-  .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-  .btn{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:0;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(217,119,6,.25)}
-  .btn.dark{background:var(--navy);box-shadow:0 4px 12px rgba(15,23,42,.25)}
-  .btn.sm{padding:7px 14px;font-size:13px}
-  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
-  .card{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
-  .card small{color:var(--mut);font-size:12px;font-weight:600}
-  .card b{display:block;font-size:21px;margin-top:6px}
-  .card.hi{background:linear-gradient(135deg,#0f172a,#1e293b);border-color:transparent}
-  .card.hi small{color:#cbd5e1}
-  .card.hi b{color:var(--gold2)}
-  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
-  .chip{font-size:13px;background:#fef3c7;color:#92400e;border-radius:999px;padding:6px 12px;font-weight:600}
-  .chip b{color:var(--navy)}
-  .tip{background:var(--soft);border:1px solid #fde68a;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:14px;line-height:1.8}
-  .scroll{overflow:auto;border:1px solid var(--line);border-radius:14px}
-  .tbl{border-collapse:separate;border-spacing:0;width:100%;min-width:760px;font-size:14px}
-  .tbl th{background:var(--navy2);color:#fff;padding:12px 8px;text-align:center;font-weight:600;line-height:1.5;position:sticky;top:0}
-  .tbl td{padding:11px 8px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
-  .tbl tbody tr:nth-child(even) td{background:#f8fafc}
-  .tbl td.k{font-weight:700}
-  .tbl tbody tr td.g{background:#fff7ed;color:#9a3412;font-weight:800}
-  .tbl td.neg{color:var(--red)}
-  .full{max-height:480px}
-  details{margin-top:16px}
-  summary{cursor:pointer;font-weight:700;font-size:14px;margin-bottom:10px}
-  .lg{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--mut);margin-top:8px}
-  .lg i{display:inline-block;width:18px;height:4px;border-radius:2px;margin-right:6px;vertical-align:middle}
-  .note{font-size:12px;color:var(--mut);line-height:1.9}
-  footer{font-size:12px;color:var(--mut);text-align:center;padding:6px 20px 34px}
-</style>
-</head>
-<body>
-<header>
-  <div class="hd">
-    <span class="eyebrow">POLICY RETURN ANALYZER</span>
-    <h1>計劃書回報分析</h1>
-    <p>匯入計劃書，自動計算單利、複利、回報及倍數，並匯出 Excel 給客戶。</p>
-  </div>
-</header>
-<main>
+  .hide{display:none}
+  .drop{display:block;border:2px dashed var(--gold2);background:var(--soft);border-radius:14px;padding:26px;text-align:center;cursor:pointer;font-weight:600}
+  .drop input{display:none}
+  .status{margin-top:10px;font-size:13px;color:var(--mut);white-space:pre-line}
+  .status.err{color:var(--red)}
+  input[type=text],input[type=number],select{border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:14px;font-family:inherit;background:#fff;color:var(--navy)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .tabs{display:flex;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:16px}
+  .tabs button{flex:1;border:0;background:transparent;padding:10px;border-radius:9px;font-size:15px;font-weight:600;color:var(--mut);cursor:pointer}
+  .tabs button.on{background:var(--navy);color:#fff}
+  .tabs button:disabled{opacity:.4}
+  .sel{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  .sel b{font-size:26px}
+  .sel span{font-size:18px;color:var(--gold);font-weight:700}
+  input[type=range]{width:100%;accent-color:var(--gold);margin:8px 0}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .chips button,.btn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--navy)}
+  .btn.pri{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+  .tile{border:1px solid var(--line);border-radius:12px;padding:12px}
+  .tile small{display:block;color:var(--mut);font-size:12px;margin-bottom:4px}
+  .tile b{font-size:19px}
+  .tile.hi{background:var(--soft);border-color:var(--gold2)}
+  .tile.hi b{color:var(--gold)}
+  svg{width:100%;height:auto;display:block;touch-action:manipulation}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:8px}
+  .legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px}
+  .tw{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}
+  th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line)}
+  th{background:var(--bg);position:sticky;top:0;font-size:12px;color:var(--mut)}
+  tr.cur td{background:var(--soft);font-weight:700}
+  tbody tr{cursor:pointer}
+  #pt td,#pt th{text-align:left}
+  #pt input[type=number]{width:70px}
+  .note{font-size:12px;color:var(--mut);margin-top:10px;line-height:1.6}
+  </style>
+  </head>
+  <body>
+  <header><div class="hd"><h1>計劃書回報分析</h1><p>上傳建議書 PDF，自動讀取「不提取」及「提取」兩種情況。檔案只在你的裝置內處理，不會上傳。</p></div></header>
+  <main>
   <section>
-    <div class="grid">
-      <div><label>客戶稱呼</label><input type="text" id="client" placeholder="例如：李先生"></div>
-      <div><label>計劃名稱</label><input type="text" id="plan" placeholder="匯入後自動填寫"></div>
-      <div><label>保單貨幣</label><select id="cur"><option>US$</option><option>HK$</option><option>RMB¥</option></select></div>
-      <div><label>投保年齡</label><input type="text" id="age" inputmode="numeric" value="0"></div>
-      <div><label>重點年度（以逗號分隔）</label><input type="text" id="ms" value="10,20,30,40,50,60,70,80,90,100"></div>
-    </div>
-    <div class="bar">
-      <input type="file" id="pdf" accept="application/pdf" style="display:none">
-      <button class="btn" id="pick">📄 匯入計劃書 PDF</button>
-      <button class="btn dark" id="exp">⬇ 匯出 Excel</button>
-      <span id="msg" style="font-size:13px;color:#b45309"></span>
-    </div>
-    <details id="dataBox">
-      <summary>📋 數據（可核對、修改或手動貼上）</summary>
-      <div class="grid">
-        <div><label>不提取方案：每行「保單年度　累計已繳保費　退保總額」</label><textarea id="tNw" spellcheck="false"></textarea></div>
-        <div><label>提取方案：每行「保單年度　累計已繳保費　當年提取　提取後退保總額」</label><textarea id="tWd" spellcheck="false"></textarea></div>
-      </div>
-      <button class="btn sm" id="calc">重新計算</button>
-    </details>
+    <h2>① 上傳建議書</h2>
+    <label class="drop">📄 點此選擇建議書 PDF<input type="file" id="file" accept="application/pdf"></label>
+    <div class="row" style="margin-top:12px"><span>計劃名稱</span><input type="text" id="name" style="flex:1;min-width:200px" placeholder="自動讀取，可修改"></div>
+    <div class="status" id="status">尚未上傳檔案。</div>
   </section>
-  <div id="out"></div>
-</main>
-<footer>本工具只供參考，所有數字以保險公司發出的計劃書為準，非保證金額並非保證。PDF 只在你的瀏覽器內讀取，不會上傳。</footer>
 
-<script>
-const $ = id => document.getElementById(id);
-const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const num = s => { const v = parseFloat(String(s == null ? '' : s).replace(/[,\s$]/g, '')); return isNaN(v) ? 0 : v; };
-const f0 = v => Math.round(v).toLocaleString('en-US');
-const pc = v => v == null ? '—' : (v * 100).toFixed(2) + '%';
-const mx = v => v == null ? '—' : v.toFixed(2) + ' 倍';
-const cur = () => $('cur').value;
-let A = { nw: [], wd: [] };
+  <div id="app" class="hide">
+  <section>
+    <div class="tabs"><button id="mBase" class="on">不提取</button><button id="mWd">提取</button></div>
+    <h2>② 保單價值概覽</h2>
+    <div class="sel"><b id="yr"></b><span id="ag"></span></div>
+    <input type="range" id="sl" min="1" max="1" value="1">
+    <div class="chips" id="chips"></div>
+    <div class="tiles" id="tiles"></div>
+    <div class="row" style="margin-bottom:8px;font-size:13px">
+      <span>圖表範圍</span><select id="rng"><option value="all">全期</option><option value="sel">至所選年度</option></select>
+      <label><input type="checkbox" id="lg"> 對數刻度（看清早年變化）</label>
+    </div>
+    <svg id="chart" viewBox="0 0 1000 400"></svg>
+    <div class="legend" id="legend"></div>
+    <div class="note">點擊圖表或拖動滑桿可選擇保單年度。非保證金額按建議書現時假設計算，實際金額可能較高或較低。</div>
+  </section>
 
-const NOTES = [
-  '倍數 ＝ 總利益 ÷ 累計已繳保費。不提取方案的總利益是退保總額；提取方案的總利益是累計提取金額加提取後的保單餘額。',
-  '單利（年均）＝（倍數 − 1）÷ 保單年度。',
-  '複利（IRR）即內部回報率：假設保費在每個保單年度開始時繳付，提取金額及退保總額在保單年度終結時收取。',
-  '退保總額包括非保證金額（復歸紅利及終期分紅），實際金額可能較高或較低。'
-];
-const DISCLAIMER = '本文件只供參考，並非保險合約的一部分。所有數字以保險公司發出的計劃書為準，非保證金額並非保證。';
+  <section id="planSec" class="hide">
+    <h2>③ 提取規劃用途</h2>
+    <div class="tw"><table id="pt"><thead><tr><th>用途</th><th>由（歲）</th><th>至（歲）</th><th>備註</th><th>提取年數</th><th>每年平均</th><th>合共提取</th><th></th></tr></thead><tbody></tbody></table></div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="pAdd">＋ 新增用途</button><button class="btn" id="pAuto">按年齡自動建議</button><button class="btn pri" id="pCopy">複製規劃摘要</button></div>
+    <div class="note" id="pNote"></div>
+  </section>
 
-// ---------- 讀取 PDF ----------
-async function readPdf(file) {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer(), cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/', cMapPacked: true }).promise;
-  const lines = [];
-  for (let p = 1; p <= pdf.numPages; p++) {
-    const page = await pdf.getPage(p);
-    const tc = await page.getTextContent();
-    const its = tc.items.filter(x => x.str && x.str.trim()).map(x => ({ s: x.str, x: x.transform[4], y: x.transform[5] }));
-    its.sort((a, b) => b.y - a.y || a.x - b.x);
-    let row = null;
-    its.forEach(it => {
-      if (!row || Math.abs(row.y - it.y) > 3) { row = { y: it.y, a: [] }; lines.push(row); }
-      row.a.push(it);
-    });
-  }
-  return lines.map(r => r.a.sort((a, b) => a.x - b.x).map(x => x.s).join(' '));
-}
+  <section>
+    <h2>④ 逐年明細</h2>
+    <div class="row" style="margin-bottom:10px"><label style="font-size:13px"><input type="checkbox" id="full"> 顯示全部年度</label><button class="btn pri" id="xl">匯出 Excel</button></div>
+    <div class="tw"><table id="tb"><thead></thead><tbody></tbody></table></div>
+    <div class="note">單利 =（退保金額 + 累計提取 − 已繳保費）÷ Σ（每年保費 × 持有年數）。例如 5 年繳、第 30 年：持有年數為 30、29、28、27、26。IRR 為複利內部回報率，假設保費於每個保單年度開始時繳付、提取及退保於年度終結時發生。提取情況的單利未反映提早收款的好處，建議以 IRR 為主。已繳保費不包括保費徵費。</div>
+  </section>
+  </div>
 
-// 從文字行找出數字表格，並按數字規律辨認各欄（不依賴欄位次序）
-function findTables(lines) {
-  const NUMRE = /^-?\d[\d,]*(\.\d+)?$/, buckets = {}, tables = [];
-  lines.forEach(l => {
-    const nums = l.split(/\s+/).filter(t => NUMRE.test(t)).map(t => parseFloat(t.replace(/,/g, '')));
-    if (nums.length >= 6 && nums.length <= 16) (buckets[nums.length] = buckets[nums.length] || []).push(nums);
-  });
-  const isSeq = v => v.every((x, i) => i === 0 || x === 1 || (x - v[i - 1] >= 1 && x - v[i - 1] <= 3));
-  Object.keys(buckets).forEach(key => {
-    const R = buckets[key], L = +key, idx = [];
-    for (let c = 0; c < L; c++) idx.push(c);
-    const yc = idx.find(c => R[0][c] === 1 && isSeq(R.map(r => r[c])));
-    if (yc === undefined) return;
-    const segs = []; let seg = [];
-    R.forEach((r, i) => { if (i > 0 && r[yc] === 1) { segs.push(seg); seg = []; } seg.push(r); });
-    segs.push(seg);
-    segs.forEach(S => {
-      const n = S.length; if (n < 5) return;
-      const col = c => S.map(r => r[c]), mid = Math.floor(n / 2);
-      const seq = idx.filter(c => isSeq(col(c)));
-      // 累計已繳保費：首年大於 0、只升不跌、後段不變
-      const pcs = idx.filter(c => !seq.includes(c)).filter(c => { const v = col(c); return v[0] > 0 && v[n - 1] === v[mid] && v.every((x, i) => i === 0 || x >= v[i - 1]); });
-      if (!pcs.length) return;
-      const pm = pcs.reduce((a, b) => S[n - 1][b] < S[n - 1][a] ? b : a);
-      const rest = idx.filter(c => !seq.includes(c) && c !== pm);
-      // 退保總額：等於另外三欄（保證現金價值＋復歸紅利＋終期分紅）之和
-      let T = -1, tri = [];
-      rest.forEach(t => {
-        if (Math.max.apply(null, col(t)) <= 0) return;
-        if (T >= 0 && S[n - 1][t] <= S[n - 1][T]) return;
-        const o = rest.filter(c => c !== t);
-        for (let a = 0; a < o.length; a++) for (let b = a + 1; b < o.length; b++) for (let c = b + 1; c < o.length; c++) {
-          if (S.every(r => Math.abs(r[o[a]] + r[o[b]] + r[o[c]] - r[t]) <= 2)) { T = t; tri = [o[a], o[b], o[c]]; return; }
-        }
-      });
-      let wc = -1;
-      if (T < 0) {
-        const mxv = Math.max.apply(null, rest.map(c => S[n - 1][c]));
-        const cand = rest.filter(c => S[n - 1][c] === mxv);
-        const sum = c => col(c).reduce((a, b) => a + b, 0);
-        if (!cand.length) return;
-        T = cand.reduce((a, b) => sum(b) < sum(a) ? b : a);
-      } else if (L <= 10) {
-        const w = rest.filter(c => c !== T && !tri.includes(c)).find(c => { const v = col(c); return Math.min.apply(null, v) === 0 && Math.max.apply(null, v) > 0; });
-        if (w !== undefined) wc = w;
+  <section><details><summary style="cursor:pointer;font-size:13px;color:var(--mut)">解析診斷（讀取有問題時請截圖這部分）</summary><div class="status" id="diag">—</div></details></section>
+  </main>
+
+  <script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+  const $=id=>document.getElementById(id);
+  const fmt=n=>n==null?'—':Math.round(n).toLocaleString('en-US');
+  const pct=v=>v==null||!isFinite(v)?'—':(v*100).toFixed(2)+'%';
+  const sum=a=>a.reduce((x,y)=>x+y,0);
+  const USES={'教育金':'🎓','退休金':'🏖','創業':'🚀','結婚':'💍','現金流':'💵','置業':'🏠','其他':'✏️'};
+  const UCOL={'教育金':'#2563eb','退休金':'#0f766e','創業':'#7c3aed','結婚':'#db2777','現金流':'#d97706','置業':'#0891b2','其他':'#64748b'};
+  let D={base:[],wd:null,cur:'',hasG:false},mode='base',sel=1,plans=[],geo=null;
+
+  /* ---------- PDF 讀取 ---------- */
+  async function readPdf(file){
+    const buf=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf,cMapUrl:'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',cMapPacked:true}).promise;
+    const pages=[];
+    for(let p=1;p<=pdf.numPages;p++){
+      const page=await pdf.getPage(p);
+      const vp=page.getViewport({scale:1});
+      const tc=await page.getTextContent();
+      const items=tc.items.filter(i=>i.str&&i.str.trim()).map(i=>{const t=pdfjsLib.Util.transform(vp.transform,i.transform);return{s:i.str.trim(),x:t[4],y:t[5]};});
+      const text=items.map(i=>i.s).join('').replace(/\s+/g,'');
+      items.sort((a,b)=>a.y-b.y||a.x-b.x);
+      const lines=[];
+      for(const it of items){const L=lines[lines.length-1];if(L&&Math.abs(L.y-it.y)<=2.5)L.items.push(it);else lines.push({y:it.y,items:[it]});}
+      const rows=[];
+      for(const L of lines){
+        L.items.sort((a,b)=>a.x-b.x);
+        const toks=L.items.flatMap(i=>i.s.split(/\s+/));
+        if(toks.length>=5&&toks.every(t=>/^-?\d[\d,]*$/.test(t)))rows.push(toks.map(t=>+t.replace(/,/g,'')));
       }
-      tables.push({ hasWd: wc >= 0, rows: S.map(r => ({ y: r[yc], prem: r[pm], wd: wc >= 0 ? r[wc] : 0, val: r[T] })) });
-    });
-  });
-  return tables.sort((a, b) => b.rows.length - a.rows.length);
-}
-
-const toTxt = (rows, hasWd) => rows.map(r => (hasWd ? [r.y, r.prem, r.wd, r.val] : [r.y, r.prem, r.val]).join('\t')).join('\n');
-function parseTxt(txt, hasWd) {
-  const need = hasWd ? 4 : 3, out = [];
-  String(txt).split(/\n/).forEach(l => {
-    const a = l.trim().split(/[\t ;；|]+/).map(t => t.replace(/,/g, '')).filter(t => /^-?\d+(\.\d+)?$/.test(t)).map(Number);
-    if (a.length >= need && a[0] >= 1) out.push(hasWd ? { y: a[0], prem: a[1], wd: a[2], val: a[3] } : { y: a[0], prem: a[1], wd: 0, val: a[2] });
-  });
-  return out.sort((a, b) => a.y - b.y);
-}
-
-// ---------- 計算 ----------
-function irr(fl) {
-  const f = r => fl.reduce((s, x) => s + x[1] / Math.pow(1 + r, x[0]), 0);
-  let lo = -0.99, hi = 1;
-  if (!(f(lo) > 0 && f(hi) < 0)) return null;
-  for (let k = 0; k < 80; k++) { const m = (lo + hi) / 2; if (f(m) > 0) lo = m; else hi = m; }
-  return (lo + hi) / 2;
-}
-function analyze(rows, age) {
-  const out = [], fl = []; let prev = 0, W = 0;
-  rows.forEach(r => {
-    const inc = r.prem - prev; prev = r.prem;
-    if (inc) fl.push([r.y - 1, -inc]);
-    if (r.wd) { fl.push([r.y, r.wd]); W += r.wd; }
-    const ben = W + r.val, N = r.y, mult = r.prem > 0 ? ben / r.prem : null;
-    out.push({ y: N, age: age + N, prem: r.prem, wd: r.wd, W, val: r.val, ben, gain: ben - r.prem, mult,
-      simple: mult == null ? null : (mult - 1) / N,
-      irr: (r.prem > 0 && ben > 0) ? irr(fl.concat([[N, r.val]])) : null });
-  });
-  return out;
-}
-function baseInfo() {
-  const b = A.nw.length ? A.nw : A.wd;
-  let pay = 0, prev = 0, total = 0;
-  b.forEach(r => { if (r.prem > prev) pay++; prev = r.prem; total = Math.max(total, r.prem); });
-  const be = b.find(r => r.ben >= r.prem);
-  return { annual: b[0].prem, pay, total, be };
-}
-function miles(rows) {
-  const set = String($('ms').value).split(/[,，\s]+/).map(Number).filter(x => x > 0);
-  const m = rows.filter(r => set.includes(r.y));
-  return m.length ? m : rows.filter((r, i) => r.y % 10 === 0 || i === rows.length - 1);
-}
-function multChips() {
-  const out = [];
-  [1, 2, 3, 4, 5, 6, 7, 8, 10, 20, 50, 100].forEach(m => {
-    const r = A.nw.find(x => x.mult != null && x.mult >= m);
-    if (r) out.push({ m, y: r.y, age: r.age });
-  });
-  return out;
-}
-function wdText() {
-  const w = A.wd.filter(r => r.wd > 0);
-  if (!w.length) return '';
-  const e = A.wd[A.wd.length - 1], c = cur();
-  return '由第 ' + w[0].y + ' 年（' + w[0].age + ' 歲）起提取，至第 ' + w[w.length - 1].y + ' 年共提取 ' + w.length + ' 次，累計提取 ' + c + f0(e.W) +
-    '；第 ' + e.y + ' 年保單餘額 ' + c + f0(e.val) + '，總利益 ' + c + f0(e.ben) + '（已繳保費的 ' + mx(e.mult) + '）。';
-}
-
-// 欄位定義：[標題, 取值, 類型]；n=數字 m=金額 x=倍數 p=百分比
-const C_Y = ['保單年度', r => r.y, 'n'], C_A = ['年齡', r => r.age, 'n'], C_P = ['累計已繳保費', r => r.prem, 'm'];
-const C_G = ['總回報', r => r.gain, 'm'], C_X = ['倍數', r => r.mult, 'x'], C_S = ['單利（年均）', r => r.simple, 'p'], C_I = ['複利（IRR）', r => r.irr, 'p'];
-const COLS_NW = [C_Y, C_A, C_P, ['退保總額', r => r.val, 'm'], C_G, C_X, C_S, C_I];
-const COLS_WD = [C_Y, C_A, C_P, ['當年提取', r => r.wd, 'm'], ['累計提取', r => r.W, 'm'], ['提取後保單餘額', r => r.val, 'm'], ['總利益（累計提取＋餘額）', r => r.ben, 'm'], C_G, C_X, C_S, C_I];
-const show = (v, t) => t === 'n' ? String(v) : t === 'm' ? cur() + f0(v) : t === 'x' ? mx(v) : pc(v);
-
-// ---------- 畫面 ----------
-function tbl(cols, rows, full) {
-  return '<div class="scroll' + (full ? ' full' : '') + '"><table class="tbl"><thead><tr>' + cols.map(c => '<th>' + c[0] + '</th>').join('') + '</tr></thead><tbody>' +
-    rows.map(r => '<tr>' + cols.map((c, k) => {
-      const v = c[1](r);
-      const cls = k === 0 ? 'k' : (c[2] === 'x' || c[2] === 'p') ? 'g' : (c[2] === 'm' && v < 0) ? 'neg' : '';
-      return '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + show(v, c[2]) + '</td>';
-    }).join('') + '</tr>').join('') + '</tbody></table></div>';
-}
-function chart() {
-  const b = A.nw.length ? A.nw : A.wd, S = [['累計已繳保費', '#94a3b8', b.map(r => [r.y, r.prem])]];
-  if (A.nw.length) S.push(['不提取｜退保總額', '#d97706', A.nw.map(r => [r.y, r.val])]);
-  if (A.wd.length) S.push(['提取｜累計提取＋保單餘額', '#0f172a', A.wd.map(r => [r.y, r.ben])]);
-  let X1 = 0, Y1 = 0;
-  S.forEach(s => s[2].forEach(p => { X1 = Math.max(X1, p[0]); Y1 = Math.max(Y1, p[1]); }));
-  if (X1 <= 1 || Y1 <= 0) return '';
-  const W = 700, H = 260, L = 10, T = 26, B = 24;
-  const X = y => L + (y - 1) / (X1 - 1) * (W - 2 * L), Y = v => H - B - v / Y1 * (H - T - B);
-  let g = '';
-  for (let k = 0; k <= 4; k++) { const yy = Y(Y1 * k / 4).toFixed(1); g += '<line x1="' + L + '" x2="' + (W - L) + '" y1="' + yy + '" y2="' + yy + '" stroke="#e2e8f0"/>'; }
-  S.forEach(s => { g += '<polyline fill="none" stroke="' + s[1] + '" stroke-width="2.5" stroke-linejoin="round" points="' + s[2].map(p => X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1)).join(' ') + '"/>'; });
-  g += '<text x="' + L + '" y="16" font-size="12" fill="#64748b">最高 ' + cur() + f0(Y1) + '</text>' +
-    '<text x="' + L + '" y="' + (H - 6) + '" font-size="12" fill="#64748b">第 1 年</text>' +
-    '<text x="' + (W - L) + '" y="' + (H - 6) + '" font-size="12" fill="#64748b" text-anchor="end">第 ' + X1 + ' 年</text>';
-  return '<section><h2>價值走勢</h2><svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto">' + g + '</svg><div class="lg">' +
-    S.map(s => '<span><i style="background:' + s[1] + '"></i>' + s[0] + '</span>').join('') + '</div></section>';
-}
-function render() {
-  const age = Math.round(num($('age').value));
-  A.nw = analyze(parseTxt($('tNw').value, false), age);
-  A.wd = analyze(parseTxt($('tWd').value, true), age);
-  if (!A.nw.length && !A.wd.length) {
-    $('out').innerHTML = '<section><div class="tip" style="margin:0">請按「匯入計劃書 PDF」，或展開「數據」手動貼上數字，然後按「重新計算」。</div></section>';
-    return;
-  }
-  const c = cur(), I = baseInfo();
-  let h = '<section class="res"><h2>保單概覽</h2><div class="cards">' +
-    '<div class="card"><small>年繳保費</small><b>' + c + f0(I.annual) + '</b></div>' +
-    '<div class="card"><small>繳費年期</small><b>' + I.pay + ' 年</b></div>' +
-    '<div class="card hi"><small>總保費</small><b>' + c + f0(I.total) + '</b></div>' +
-    '<div class="card hi"><small>回本年度</small><b>' + (I.be ? '第 ' + I.be.y + ' 年' : '—') + '</b></div></div></section>';
-  h += chart();
-  if (A.nw.length) {
-    h += '<section class="res"><h2>不提取方案（複利累積）</h2><div class="chips">' +
-      multChips().map(x => '<span class="chip">' + (x.m === 1 ? '回本' : x.m + ' 倍') + '｜<b>第 ' + x.y + ' 年（' + x.age + ' 歲）</b></span>').join('') + '</div>' +
-      tbl(COLS_NW, miles(A.nw)) + '<details><summary>查看逐年數字</summary>' + tbl(COLS_NW, A.nw, true) + '</details></section>';
-  }
-  if (A.wd.length) {
-    const t = wdText();
-    h += '<section class="res"><h2>提取方案</h2>' + (t ? '<div class="tip">' + t + '</div>' : '') +
-      tbl(COLS_WD, miles(A.wd)) + '<details><summary>查看逐年數字</summary>' + tbl(COLS_WD, A.wd, true) + '</details></section>';
-  }
-  h += '<section><h2>計算說明</h2><div class="note">' + NOTES.map(x => '・' + x).join('<br>') + '</div></section>';
-  $('out').innerHTML = h;
-}
-
-// ---------- 事件 ----------
-$('pick').addEventListener('click', () => $('pdf').click());
-$('pdf').addEventListener('change', async ev => {
-  const f = ev.target.files[0]; if (!f) return;
-  if (!window.pdfjsLib) { $('msg').textContent = 'PDF 元件未能載入，請檢查網絡後重新整理。'; return; }
-  $('msg').textContent = '讀取中…';
-  try {
-    const lines = await readPdf(f), tables = findTables(lines);
-    const nw = tables.find(t => !t.hasWd), wd = tables.find(t => t.hasWd);
-    $('tNw').value = nw ? toTxt(nw.rows, false) : '';
-    $('tWd').value = wd ? toTxt(wd.rows, true) : '';
-    const all = lines.join('\n');
-    const pm = all.match(/建[议議][书書]摘要[：:]\s*([^\n]+)/);
-    if (pm) $('plan').value = pm[1].trim();
-    const cm = all.match(/保[单單][货貨][币幣][：:]\s*(美元|港元|人民[币幣])/);
-    if (cm) $('cur').value = cm[1] === '美元' ? 'US$' : cm[1] === '港元' ? 'HK$' : 'RMB¥';
-    if (nw || wd) {
-      $('msg').textContent = '已讀取：不提取方案 ' + (nw ? nw.rows.length + ' 年' : '找不到') + '；提取方案 ' + (wd ? wd.rows.length + ' 年' : '找不到') + '。請對照計劃書核對數字。';
-    } else {
-      $('msg').textContent = '未能從此 PDF 辨認表格，請展開「數據」手動貼上。';
-      $('dataBox').open = true;
+      pages.push({n:p,text,rows});
     }
-    render();
-  } catch (e) { $('msg').textContent = '讀取失敗：' + e.message; }
-  ev.target.value = '';
-});
-$('calc').addEventListener('click', render);
-['age', 'ms'].forEach(id => $(id).addEventListener('input', render));
-$('cur').addEventListener('change', render);
-
-// ---------- 匯出 Excel ----------
-const XC = { navy: 'FF0F172A', navy2: 'FF1E293B', soft: 'FFFEF3C7', light: 'FFF8FAFC', line: 'FFCBD5E1', pay: 'FFFFF7ED', payTxt: 'FF9A3412', red: 'FFDC2626', mut: 'FF64748B', white: 'FFFFFFFF' };
-const XHEAD = { bold: true, color: XC.white, fill: XC.navy2 };
-function xCell(ws, r, c1, c2, v, o) {
-  o = o || {};
-  const s = { style: 'thin', color: { argb: XC.line } };
-  for (let c = c1; c <= c2; c++) {
-    const cell = ws.getCell(r, c);
-    if (c === c1) cell.value = v;
-    cell.font = { name: 'Microsoft JhengHei', size: o.size || 11, bold: !!o.bold, italic: !!o.italic, color: { argb: o.color || XC.navy } };
-    cell.alignment = { horizontal: o.align || 'center', vertical: 'middle', wrapText: true };
-    if (o.fill) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: o.fill } };
-    if (!o.noBorder) cell.border = { top: s, left: s, bottom: s, right: s };
-    if (o.fmt) cell.numFmt = o.fmt;
+    return pages;
   }
-  if (c2 > c1) ws.mergeCells(r, c1, r, c2);
-}
-function xFmt(t) {
-  const q = '"' + cur().replace(/"/g, '') + '"';
-  return t === 'm' ? q + '#,##0;[Red]-' + q + '#,##0' : t === 'x' ? '0.00"倍"' : t === 'p' ? '0.00%' : '0';
-}
-// 寫入一個表格，回傳下一個空白列
-function xTable(ws, r, cols, rows) {
-  cols.forEach((c, k) => xCell(ws, r, k + 1, k + 1, c[0], XHEAD));
-  ws.getRow(r).height = 36; r++;
-  rows.forEach((row, i) => {
-    const z = i % 2 ? XC.light : undefined;
-    cols.forEach((c, k) => {
-      const v = c[1](row), hi = c[2] === 'x' || c[2] === 'p';
-      xCell(ws, r, k + 1, k + 1, v == null ? '—' : v, { fmt: xFmt(c[2]), bold: k === 0 || hi, fill: hi ? XC.pay : z, color: hi ? XC.payTxt : undefined });
+  function modal(rows){
+    const cnt={};rows.forEach(r=>cnt[r.length]=(cnt[r.length]||0)+1);
+    let best=0,bn=0;for(const k in cnt)if(cnt[k]>bn){bn=cnt[k];best=+k;}
+    return rows.filter(r=>r.length===best);
+  }
+  const cols=rows=>Array.from({length:rows[0].length},(_,c)=>rows.map(r=>r[c]));
+  const seqCols=C=>C.map((c,i)=>c.every((v,k)=>v===c[0]+k)?i:-1).filter(i=>i>=0);
+  const same=(a,b)=>a.every((v,k)=>Math.abs(v-b[k])<=2);
+  function findSum(C,ex){
+    const R=C[0].length,idx=[];for(let i=0;i<C.length;i++)if(!ex.includes(i))idx.push(i);
+    const ok=(t,ps)=>{if(ps.some(p=>same(C[p],C[t])))return false;for(let k=0;k<R;k++){let s=0;for(const p of ps)s+=C[p][k];if(Math.abs(s-C[t][k])>2)return false;}return true;};
+    for(const size of [3,2]){
+      for(const t of idx){
+        if(sum(C[t])<=0)continue;
+        const o=idx.filter(i=>i!==t);
+        for(let a=0;a<o.length;a++)for(let b=a+1;b<o.length;b++){
+          if(size===2){if(ok(t,[o[a],o[b]]))return{t,parts:[o[a],o[b]]};}
+          else for(let c=b+1;c<o.length;c++)if(ok(t,[o[a],o[b],o[c]]))return{t,parts:[o[a],o[b],o[c]]};
+        }
+      }
+    }
+    return null;
+  }
+  function deathCol(C,S,ex){
+    let best=-1,bs=Infinity;
+    C.forEach((c,i)=>{if(ex.includes(i))return;if(!c.every((v,k)=>v>=S[k]-2))return;if(same(c,S))return;const s=sum(c);if(s<bs){bs=s;best=i;}});
+    return best<0?S.slice():C[best];
+  }
+  function parseDetail(rows){
+    const C=cols(rows),sq=seqCols(C),yi=sq.find(i=>C[i][0]===1);if(yi===undefined)return null;
+    const ai=sq.find(i=>i!==yi);
+    const sm=findSum(C,[yi,ai]);if(!sm)return null;
+    const S=C[sm.t],L=rows.length-1,mid=Math.floor(L/2);
+    let pi=-1;
+    C.forEach((c,i)=>{if(i===yi||i===ai)return;if(c[0]>0&&c[L]===c[mid]&&c.every((v,k)=>k===0||v>=c[k-1])){if(pi<0||c[L]<C[pi][L])pi=i;}});
+    if(pi<0)return null;
+    const dup=i=>C.some((c,j)=>j!==i&&c.every((v,k)=>v===C[i][k]));
+    const g=sm.parts.filter(i=>!dup(i)),gi=g.length===1?g[0]:-1;
+    const db=deathCol(C,S,[yi,ai,pi]);
+    return{hasG:gi>=0,rows:rows.map((_,k)=>({y:C[yi][k],age:ai!==undefined?C[ai][k]:C[yi][k],prem:C[pi][k],gcv:gi>=0?C[gi][k]:null,sv:S[k],db:db[k],w:0,cumW:0}))};
+  }
+  function parseWS(rows){
+    const C=cols(rows),sq=seqCols(C),yi=sq.find(i=>C[i][0]===1);if(yi===undefined)return null;
+    const ai=sq.find(i=>i!==yi);
+    const sm=findSum(C,[yi,ai]);if(!sm)return null;
+    const used=[yi,ai,sm.t,...sm.parts];let wi=-1,ws=Infinity,z=false;
+    C.forEach((c,i)=>{if(used.includes(i))return;const s=sum(c);if(s<=0)return;const z0=c[0]===0;if((z0&&!z)||(z0===z&&s<ws)){wi=i;ws=s;z=z0;}});
+    if(wi<0)return null;
+    let cum=0;
+    return rows.map((_,k)=>{cum+=C[wi][k];return{y:C[yi][k],age:ai!==undefined?C[ai][k]:C[yi][k],w:C[wi][k],cumW:cum,sv:C[sm.t][k],db:null,gcv:null};});
+  }
+  function parseWDeath(rows,wd){
+    const C=cols(rows),sq=seqCols(C),yi=sq.find(i=>C[i][0]===1);if(yi===undefined)return false;
+    const ai=sq.find(i=>i!==yi);
+    const m={};wd.forEach(r=>m[r.y]=r.sv);
+    const S=C[yi].map(y=>m[y]);if(S.some(v=>v===undefined))return false;
+    const db=deathCol(C,S,[yi,ai]);const dm={};C[yi].forEach((y,k)=>dm[y]=db[k]);
+    wd.forEach(r=>{if(dm[r.y]!==undefined)r.db=dm[r.y];});
+    return true;
+  }
+  function irr(cf){
+    const npv=r=>cf.reduce((s,v,t)=>s+v/Math.pow(1+r,t),0);
+    let lo=-0.99,hi=1;if(npv(lo)*npv(hi)>0)return null;
+    for(let i=0;i<100;i++){const m=(lo+hi)/2;if(npv(lo)*npv(m)<=0)hi=m;else lo=m;}
+    return(lo+hi)/2;
+  }
+  function enrich(rows){
+    const pf=D.base.map((r,i)=>r.prem-(i?D.base[i-1].prem:0));
+    rows.forEach((r,idx)=>{
+      const n=r.y,cf=new Array(n+1).fill(0);
+      let py=0;
+      for(let t=0;t<n;t++){cf[t]-=pf[t]||0;py+=(pf[t]||0)*(n-t);}
+      for(let k=0;k<=idx;k++)cf[rows[k].y]+=rows[k].w;
+      cf[n]+=r.sv;
+      r.total=r.sv+r.cumW;r.mult=r.prem?r.total/r.prem:null;r.simple=py>0?(r.total-r.prem)/py:null;r.irr=irr(cf);
     });
-    ws.getRow(r).height = 22; r++;
-  });
-  return r;
-}
-function xToday() { const d = new Date(); return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日'; }
-function xTitle(ws, title, NC) {
-  xCell(ws, 1, 1, NC, title, { bold: true, size: 16, color: XC.white, fill: XC.navy, noBorder: true });
-  ws.getRow(1).height = 38;
-  xCell(ws, 2, 1, NC, '製表日期：' + xToday(), { size: 9, color: XC.mut, fill: XC.light, noBorder: true });
-  ws.getRow(2).height = 20;
-}
-function xSummary(wb) {
-  const NC = 11, ws = wb.addWorksheet('方案摘要', { views: [{ showGridLines: false }] });
-  ws.columns = Array.from({ length: NC }, () => ({ width: 17 }));
-  ws.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
-  const client = $('client').value.trim(), plan = $('plan').value.trim(), I = baseInfo();
-  xTitle(ws, (client ? client + '｜' : '') + '保單回報分析', NC);
-  let r = 3;
-  const sec = t => { r++; xCell(ws, r, 1, NC, t, { bold: true, size: 12, fill: XC.soft, align: 'left' }); ws.getRow(r).height = 26; r++; };
-  const info = (label, v, fmt, h) => {
-    xCell(ws, r, 1, 3, label, { bold: true, fill: XC.light, align: 'left' });
-    xCell(ws, r, 4, NC, v, { align: 'left', fmt });
-    ws.getRow(r).height = h || 22; r++;
-  };
-  sec('一、保單資料');
-  if (client) info('客戶', client);
-  if (plan) info('計劃名稱', plan);
-  info('保單貨幣', cur());
-  info('投保年齡', Math.round(num($('age').value)) + ' 歲');
-  info('年繳保費', I.annual, xFmt('m'));
-  info('繳費年期', I.pay + ' 年');
-  info('總保費', I.total, xFmt('m'));
-  if (I.be) info('回本年度', '第 ' + I.be.y + ' 年（' + I.be.age + ' 歲）');
-  if (A.nw.length) {
-    sec('二、不提取方案（複利累積）｜重點年度');
-    const ch = multChips().filter(x => x.m > 1).map(x => x.m + ' 倍：第 ' + x.y + ' 年（' + x.age + ' 歲）').join('　｜　');
-    if (ch) info('資金倍增時間', ch, undefined, 40);
-    r = xTable(ws, r, COLS_NW, miles(A.nw));
   }
-  if (A.wd.length) {
-    sec((A.nw.length ? '三' : '二') + '、提取方案｜重點年度');
-    const t = wdText();
-    if (t) info('提取安排', t, undefined, 40);
-    r = xTable(ws, r, COLS_WD, miles(A.wd));
+  async function handle(file){
+    const st=$('status');st.className='status';st.textContent='讀取中，請稍候…';
+    try{
+      const pages=await readPdf(file);
+      const dR=[],sR=[],xR=[],dg=[];
+      pages.forEach(p=>{
+        const t=p.text;let k='';
+        if(t.includes('現金提取舉例')){
+          if(/悲觀情景|樂觀情景/.test(t))k='略過（悲觀／樂觀情景）';
+          else if(t.includes('現金提取後之退保發還金額')){k='提取－退保發還金額';sR.push(...p.rows);}
+          else if(t.includes('現金提取後之身故賠償額')){k='提取－身故賠償額';xR.push(...p.rows);}
+          else k='提取金額細分（不使用）';
+        }else if(t.includes('詳細說明')){k='不提取－詳細說明';dR.push(...p.rows);}
+        if(k)dg.push(`第 ${p.n} 頁：${k}（數字行 ${p.rows.length}）`);
+      });
+      $('diag').textContent=dg.length?dg.join('\n'):'找不到「詳細說明」或「現金提取舉例」頁面。';
+      if(!dR.length)throw new Error('找不到「詳細說明」頁面的數字。請確認上傳的是完整建議書 PDF（非掃描圖片）。');
+      const det=parseDetail(modal(dR));
+      if(!det)throw new Error('找到「詳細說明」頁面，但無法辨認欄位。請把「解析診斷」截圖給開發者。');
+      D={base:det.rows,wd:null,hasG:det.hasG,cur:''};
+      const t0=pages.map(p=>p.text).join('');
+      const cm=t0.match(/保單貨幣[:：]([\u4e00-\u9fa5]{1,3}元)/);D.cur=cm?cm[1]:'';
+      const nm=t0.match(/([\u4e00-\u9fa5\w]{2,24}計劃（[^）]{1,10}）)/);
+      if(nm)$('name').value=nm[1].replace(/^.*(有限公司|說明文件)/,'');
+      enrich(D.base);
+      let msg=`✅ 不提取：已讀取 ${D.base.length} 個保單年度。`;
+      if(sR.length){
+        const wd=parseWS(modal(sR));
+        if(wd){
+          const pm={};D.base.forEach(r=>pm[r.y]=r.prem);
+          wd.forEach(r=>r.prem=pm[r.y]!==undefined?pm[r.y]:D.base[D.base.length-1].prem);
+          D.wd=wd;
+          const okD=xR.length?parseWDeath(modal(xR),wd):false;
+          enrich(wd);
+          msg+=`\n✅ 提取：已讀取 ${wd.length} 個保單年度，合共提取 ${fmt(wd[wd.length-1].cumW)}。`+(okD?'':'\n⚠️ 未能讀取提取後的身故賠償額。');
+        }else msg+='\n⚠️ 找到「現金提取舉例」頁面，但無法辨認欄位。';
+      }else msg+='\nℹ️ 此建議書沒有「現金提取舉例」頁面，只能顯示不提取。';
+      st.textContent=msg+'\n請抽查幾個年度，與建議書原文核對。';
+      mode='base';sel=Math.min(20,D.base.length);plans=[];if(D.wd)autoPlans();
+      buildChips();$('app').classList.remove('hide');render();
+    }catch(e){st.className='status err';st.textContent='❌ '+(e.message||e);}
   }
-  sec('計算說明');
-  NOTES.concat([DISCLAIMER]).forEach(t => { xCell(ws, r, 1, NC, t, { size: 9, color: XC.mut, align: 'left', noBorder: true }); ws.getRow(r).height = 20; r++; });
-}
-function xFull(wb, name, title, cols, rows) {
-  const ws = wb.addWorksheet(name, { views: [{ state: 'frozen', ySplit: 4, showGridLines: false }] });
-  ws.columns = cols.map(() => ({ width: 17 }));
-  ws.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
-  xTitle(ws, title, cols.length);
-  xTable(ws, 4, cols, rows);
-}
-$('exp').addEventListener('click', async () => {
-  if (!window.ExcelJS) { alert('Excel 元件未能載入，請檢查網絡後重新整理頁面再試。'); return; }
-  if (!A.nw.length && !A.wd.length) { alert('請先匯入計劃書或貼上數據。'); return; }
-  const b = $('exp'), old = b.textContent;
-  b.textContent = '匯出中…';
-  try {
-    const wb = new ExcelJS.Workbook();
-    xSummary(wb);
-    if (A.nw.length) xFull(wb, '不提取方案（逐年）', '不提取方案｜逐年回報分析', COLS_NW, A.nw);
-    if (A.wd.length) xFull(wb, '提取方案（逐年）', '提取方案｜逐年回報分析', COLS_WD, A.wd);
-    const buf = await wb.xlsx.writeBuffer();
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
-    a.download = '保單回報分析.xlsx';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
-  } catch (e) { alert('匯出失敗：' + e.message); }
-  b.textContent = old;
-});
 
-render();
-</script>
-</body>
-</html>
+  /* ---------- 顯示 ---------- */
+  const rows=()=>mode==='wd'&&D.wd?D.wd:D.base;
+  function series(){
+    const rs=rows(),s=[];
+    if(mode==='wd'&&D.wd){
+      s.push({n:'總得益（累計提取＋餘額）',c:'#7c3aed',f:r=>r.total},{n:'提取後退保金額',c:'#d97706',f:r=>r.sv},{n:'累計已提取',c:'#2563eb',f:r=>r.cumW});
+      if(rs.every(r=>r.db!=null))s.push({n:'提取後身故賠償額',c:'#dc2626',f:r=>r.db});
+    }else{
+      s.push({n:'身故賠償額',c:'#dc2626',f:r=>r.db},{n:'退保發還金額',c:'#d97706',f:r=>r.sv});
+      if(D.hasG)s.push({n:'保證現金價值',c:'#0f766e',f:r=>r.gcv});
+    }
+    s.push({n:'已繳總保費',c:'#64748b',d:1,f:r=>r.prem});
+    return s;
+  }
+  function buildChips(){
+    const b=D.base,list=[];
+    [5,10,15,20,30].forEach(y=>{if(y<=b.length)list.push({l:'第'+y+'年',y});});
+    [65,75,85,100].forEach(a=>{const r=b.find(x=>x.age===a);if(r&&!list.some(c=>c.y===r.y))list.push({l:a+'歲',y:r.y});});
+    $('chips').innerHTML=list.map(c=>`<button data-y="${c.y}">${c.l}</button>`).join('');
+  }
+  function short(v){return v>=1e8?+(v/1e8).toFixed(2)+'億':v>=1e4?+(v/1e4).toFixed(1)+'萬':fmt(v);}
+  function nice(x){const p=Math.pow(10,Math.floor(Math.log10(x))),m=x/p;return(m<=1?1:m<=2?2:m<=5?5:10)*p;}
+  function draw(){
+    const all=rows(),N=$('rng').value==='all'?all.length:Math.min(all.length,Math.max(10,sel)),rs=all.slice(0,N),log=$('lg').checked,S=series();
+    const W=1000,H=400,pl=70,pr=16,pt=30,pb=48;
+    let mx=0,mn=Infinity;rs.forEach(r=>S.forEach(s=>{const v=s.f(r);if(v>mx)mx=v;if(v>0&&v<mn)mn=v;}));
+    if(mx<=0)mx=1;if(!isFinite(mn))mn=1;
+    let ys,ticks=[];
+    if(log){const lo=Math.floor(Math.log10(Math.max(mn,1)));let hi=Math.ceil(Math.log10(mx));if(hi<=lo)hi=lo+1;
+      ys=v=>pt+(H-pt-pb)*(1-(Math.log10(Math.max(v,Math.pow(10,lo)))-lo)/(hi-lo));for(let e=lo;e<=hi;e++)ticks.push(Math.pow(10,e));}
+    else{const stp=nice(mx/5),hi=Math.ceil(mx/stp)*stp;ys=v=>pt+(H-pt-pb)*(1-v/hi);for(let v=0;v<=hi+1e-6;v+=stp)ticks.push(v);}
+    const xs=y=>pl+(W-pl-pr)*(N>1?(y-1)/(N-1):0);
+    let h='';
+    ticks.forEach(t=>{const y=ys(t);h+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="#e2e8f0"/><text x="${pl-8}" y="${y+4}" text-anchor="end" font-size="12" fill="#64748b">${short(t)}</text>`;});
+    const xstep=N<=12?1:N<=30?5:10;
+    rs.forEach(r=>{if(r.y===1||r.y%xstep===0){const x=xs(r.y);h+=`<text x="${x}" y="${H-pb+18}" text-anchor="middle" font-size="12" fill="#0f172a">${r.y}</text><text x="${x}" y="${H-pb+34}" text-anchor="middle" font-size="11" fill="#64748b">${r.age}歲</text>`;}});
+    if(mode==='wd'&&D.wd){const half=N>1?(W-pl-pr)/(N-1)/2:0;
+      plans.forEach(p=>{const ys2=rs.filter(r=>r.age>=p.from&&r.age<=p.to&&r.w>0);if(!ys2.length)return;
+        const x1=Math.max(pl,xs(ys2[0].y)-half),x2=Math.min(W-pr,xs(ys2[ys2.length-1].y)+half),c=UCOL[p.use]||'#64748b';
+        h+=`<rect x="${x1}" y="${pt}" width="${x2-x1}" height="${H-pt-pb}" fill="${c}" opacity=".09"/><text x="${(x1+x2)/2}" y="${pt-8}" text-anchor="middle" font-size="12" fill="${c}">${USES[p.use]||''}${p.use}</text>`;});}
+    S.forEach(s=>{h+=`<path d="M${rs.map(r=>xs(r.y).toFixed(1)+','+ys(s.f(r)||0).toFixed(1)).join('L')}" fill="none" stroke="${s.c}" stroke-width="2.5"${s.d?' stroke-dasharray="6 5"':''}/>`;});
+    if(sel<=N){const x=xs(sel),r=all[sel-1];h+=`<line x1="${x}" x2="${x}" y1="${pt}" y2="${H-pb}" stroke="#0f172a" stroke-dasharray="3 3"/>`;S.forEach(s=>{h+=`<circle cx="${x}" cy="${ys(s.f(r)||0)}" r="5" fill="#fff" stroke="${s.c}" stroke-width="2.5"/>`;});}
+    $('chart').innerHTML=h;geo={pl,pr,W,N};
+    $('legend').innerHTML=S.map(s=>`<span><i style="background:${s.c}"></i>${s.n}</span>`).join('');
+  }
+  function tiles(r){
+    const cu=D.cur?' '+D.cur:'',T=[];
+    T.push(['已繳總保費',fmt(r.prem)+cu]);
+    if(mode==='wd'&&D.wd){
+      T.push(['當年提取',fmt(r.w)+cu],['累計已提取',fmt(r.cumW)+cu,1],['提取後退保金額',fmt(r.sv)+cu,1]);
+      if(r.db!=null)T.push(['提取後身故賠償額',fmt(r.db)+cu]);
+      T.push(['總得益（提取＋餘額）',fmt(r.total)+cu]);
+    }else{
+      T.push(['退保發還金額',fmt(r.sv)+cu,1],['身故賠償額',fmt(r.db)+cu,1]);
+      if(D.hasG)T.push(['保證現金價值',fmt(r.gcv)+cu]);
+    }
+    T.push(['總得益 ÷ 已繳保費',r.mult==null?'—':r.mult.toFixed(2)+' 倍'],['SI 單利',pct(r.simple)],['IRR 複利',pct(r.irr)]);
+    $('tiles').innerHTML=T.map(t=>`<div class="tile${t[2]?' hi':''}"><small>${t[0]}</small><b>${t[1]}</b></div>`).join('');
+  }
+  function table(){
+    const rs=rows(),wd=mode==='wd'&&D.wd,full=$('full').checked,hasDb=rs.every(r=>r.db!=null);
+    const H=wd?['年度','年齡','已繳保費','當年提取','累計提取','提取後退保金額'].concat(hasDb?['提取後身故賠償']:[],['總得益','倍數','單利','IRR'])
+      :['年度','年齡','已繳保費'].concat(D.hasG?['保證現金價值']:[],['退保發還金額','身故賠償額','倍數','單利','IRR']);
+    $('tb').querySelector('thead').innerHTML='<tr>'+H.map(x=>`<th>${x}</th>`).join('')+'</tr>';
+    $('tb').querySelector('tbody').innerHTML=rs.filter(r=>full||r.y<=10||r.y%5===0||r.y===rs.length||r.y===sel).map(r=>{
+      const c=wd?[r.y,r.age,fmt(r.prem),fmt(r.w),fmt(r.cumW),fmt(r.sv)].concat(hasDb?[fmt(r.db)]:[],[fmt(r.total)])
+        :[r.y,r.age,fmt(r.prem)].concat(D.hasG?[fmt(r.gcv)]:[],[fmt(r.sv),fmt(r.db)]);
+      c.push(r.mult==null?'—':r.mult.toFixed(2),pct(r.simple),pct(r.irr));
+      return`<tr data-y="${r.y}" class="${r.y===sel?'cur':''}">${c.map(x=>`<td>${x}</td>`).join('')}</tr>`;}).join('');
+  }
+  function pstat(p){const rs=D.wd.filter(r=>r.age>=p.from&&r.age<=p.to&&r.w>0),t=sum(rs.map(r=>r.w));return{n:rs.length,t,avg:rs.length?t/rs.length:0};}
+  function autoPlans(){
+    plans=[];
+    [[0,22,'教育金'],[23,27,'創業'],[28,32,'結婚'],[33,59,'現金流'],[60,200,'退休金']].forEach(s=>{
+      const a=D.wd.filter(r=>r.w>0&&r.age>=s[0]&&r.age<=s[1]).map(r=>r.age);
+      if(a.length)plans.push({use:s[2],from:Math.min(...a),to:Math.max(...a),note:''});});
+  }
+  function renderPlans(){
+    const on=mode==='wd'&&D.wd;$('planSec').classList.toggle('hide',!on);if(!on)return;
+    const cu=D.cur?' '+D.cur:'';let asg=0;
+    $('pt').querySelector('tbody').innerHTML=plans.map((p,i)=>{const s=pstat(p);asg+=s.t;
+      return`<tr><td><select data-i="${i}" data-k="use">${Object.keys(USES).map(u=>`<option${u===p.use?' selected':''} value="${u}">${USES[u]} ${u}</option>`).join('')}</select></td>
+      <td><input type="number" data-i="${i}" data-k="from" value="${p.from}"></td><td><input type="number" data-i="${i}" data-k="to" value="${p.to}"></td>
+      <td><input type="text" data-i="${i}" data-k="note" value="${(p.note||'').replace(/"/g,'&quot;')}" placeholder="例如：海外升學"></td>
+      <td>${s.n} 年</td><td>${fmt(s.avg)}${cu}</td><td><b>${fmt(s.t)}${cu}</b></td><td><button class="btn" data-del="${i}">刪除</button></td></tr>`;}).join('');
+    const tot=D.wd[D.wd.length-1].cumW,last=D.wd[D.wd.length-1];
+    $('pNote').textContent=`建議書合共提取 ${fmt(tot)}${cu}；已分配用途 ${fmt(asg)}${cu}`+(Math.abs(asg-tot)>1?`（差額 ${fmt(tot-asg)}，可能有未分配或重疊的歲數）`:'')+`。${last.age} 歲時保單餘額仍有 ${fmt(last.sv)}${cu}（非保證）。`;
+  }
+  function planText(){
+    const cu=D.cur?' '+D.cur:'',last=D.wd[D.wd.length-1];
+    let t=($('name').value||'儲蓄計劃')+'｜提取規劃\n已繳總保費：'+fmt(last.prem)+cu+'\n';
+    plans.forEach(p=>{const s=pstat(p);t+=`${USES[p.use]||''} ${p.from}–${p.to} 歲【${p.use}】${p.note?'（'+p.note+'）':''}：每年約 ${fmt(s.avg)}${cu}，共 ${fmt(s.t)}${cu}\n`;});
+    t+=`合共提取：${fmt(last.cumW)}${cu}（已繳保費的 ${(last.cumW/last.prem).toFixed(1)} 倍）\n${last.age} 歲時保單餘額：${fmt(last.sv)}${cu}\n*以上包含非保證金額，按建議書現時假設計算，實際金額可能較高或較低。`;
+    return t;
+  }
+  function render(){
+    const rs=rows();if(sel>rs.length)sel=rs.length;if(sel<1)sel=1;
+    $('mBase').classList.toggle('on',mode==='base');$('mWd').classList.toggle('on',mode==='wd');$('mWd').disabled=!D.wd;
+    $('sl').max=rs.length;$('sl').value=sel;
+    const r=rs[sel-1];$('yr').textContent='保單年度 '+r.y;$('ag').textContent=r.age+' 歲';
+    tiles(r);draw();table();renderPlans();
+  }
+
+  /* ---------- 匯出 ---------- */
+  async function xlsx(){
+    const wb=new ExcelJS.Workbook(),p2=v=>v==null||!isFinite(v)?null:+(v*100).toFixed(2);
+    const add=(n,head,data)=>{const ws=wb.addWorksheet(n);ws.addRow(head).font={bold:true};data.forEach(d=>ws.addRow(d));ws.columns.forEach(c=>c.width=18);};
+    add('不提取',['保單年度','年齡','已繳保費','保證現金價值','退保發還金額','身故賠償額','倍數','單利(%)','IRR(%)'],D.base.map(r=>[r.y,r.age,r.prem,r.gcv,r.sv,r.db,r.mult==null?null:+r.mult.toFixed(2),p2(r.simple),p2(r.irr)]));
+    if(D.wd){
+      add('提取',['保單年度','年齡','已繳保費','當年提取','累計提取','提取後退保金額','提取後身故賠償額','總得益','倍數','單利(%)','IRR(%)'],D.wd.map(r=>[r.y,r.age,r.prem,r.w,r.cumW,r.sv,r.db,r.total,r.mult==null?null:+r.mult.toFixed(2),p2(r.simple),p2(r.irr)]));
+      add('規劃用途',['用途','由(歲)','至(歲)','備註','提取年數','每年平均','合共提取'],plans.map(p=>{const s=pstat(p);return[p.use,p.from,p.to,p.note,s.n,Math.round(s.avg),s.t];}));
+    }
+    const buf=await wb.xlsx.writeBuffer(),a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    a.download=($('name').value||'計劃書')+'_回報分析.xlsx';document.body.appendChild(a);a.click();a.remove();
+  }
+
+  /* ---------- 事件 ---------- */
+  $('file').addEventListener('change',e=>{if(e.target.files[0])handle(e.target.files[0]);});
+  $('mBase').onclick=()=>{mode='base';render();};
+  $('mWd').onclick=()=>{if(D.wd){mode='wd';render();}};
+  $('sl').addEventListener('input',e=>{sel=+e.target.value;render();});
+  $('chips').addEventListener('click',e=>{const y=e.target.dataset.y;if(y){sel=+y;render();}});
+  $('rng').onchange=draw;$('lg').onchange=draw;$('full').onchange=table;
+  $('chart').addEventListener('click',e=>{if(!geo)return;const b=$('chart').getBoundingClientRect(),x=(e.clientX-b.left)/b.width*geo.W;
+    const y=Math.round((x-geo.pl)/(geo.W-geo.pl-geo.pr)*(geo.N-1))+1;sel=Math.max(1,Math.min(geo.N,y));render();});
+  $('tb').addEventListener('click',e=>{const tr=e.target.closest('tr[data-y]');if(tr){sel=+tr.dataset.y;render();}});
+  $('pt').addEventListener('change',e=>{const i=e.target.dataset.i,k=e.target.dataset.k;if(i===undefined)return;
+    plans[i][k]=(k==='from'||k==='to')?(+e.target.value||0):e.target.value;render();});
+  $('pt').addEventListener('click',e=>{const d=e.target.dataset.del;if(d!==undefined){plans.splice(+d,1);render();}});
+  $('pAdd').onclick=()=>{const a=D.wd.filter(r=>r.w>0).map(r=>r.age);plans.push({use:'現金流',from:a.length?Math.min(...a):0,to:a.length?Math.max(...a):0,note:''});render();};
+  $('pAuto').onclick=()=>{autoPlans();render();};
+  $('pCopy').onclick=()=>{const t=planText();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>alert('已複製規劃摘要')).catch(()=>prompt('請手動複製：',t));};
+  $('xl').onclick=()=>xlsx().catch(e=>alert('匯出失敗：'+e.message));
+  </script>
+  </body>
+  </html>
