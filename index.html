@@ -81,6 +81,7 @@
   <div id="app" class="hide">
   <section>
     <div class="tabs"><button id="mBase" class="on">不提取</button><button id="mWd">提取</button></div>
+    <div class="row" style="font-size:13px;margin-bottom:14px"><span>提取入帳時間</span><select id="wt"><option value="start">年初（與單利複利計算器一致）</option><option value="end">年終（按建議書「保單年度終結」）</option></select></div>
     <h2>② 保單價值概覽</h2>
     <div class="sel"><b id="yr"></b><span id="ag"></span></div>
     <input type="range" id="sl" min="1" max="1" value="1">
@@ -118,7 +119,7 @@
       <label class="ck"><input type="checkbox" id="full"> 顯示全部年度</label>
     </div>
     <div class="tw"><table id="tb"><thead></thead><tbody></tbody></table></div>
-    <div class="note">保證金額 = 保證現金價值；非保證金額 = 復歸紅利及終期分紅的現金價值。總得益 = 退保金額 + 累計提取。單利 =（總得益 − 已繳保費）÷ Σ（每年保費 × 持有年數）。IRR 為複利內部回報率，假設保費於每個保單年度開始時繳付、提取及退保於年度終結時發生。已繳保費不包括保費徵費。</div>
+    <div class="note">保證金額 = 保證現金價值；非保證金額 = 復歸紅利及終期分紅的現金價值。總得益 = 退保金額 + 累計提取。單利 =（總得益 ÷ 已繳保費 − 1）÷（平均收款時間 − 平均繳費時間），時間按金額加權平均。IRR 為複利內部回報率。保費於每個保單年度開始時繳付，退保於年度終結時發生，提取的入帳時間按上方選項。已繳保費不包括保費徵費。</div>
   </section>
 
   <section id="cmpSec" class="hide">
@@ -138,11 +139,13 @@
   const fmt=n=>n==null?'—':Math.round(n).toLocaleString('en-US');
   const pct=v=>v==null||!isFinite(v)?'—':(v*100).toFixed(2)+'%';
   const mul=v=>v==null||!isFinite(v)?'—':v.toFixed(2)+' 倍';
+  const yrs=v=>v==null||!isFinite(v)?'—':v.toFixed(2)+' 年';
   const sum=a=>a.reduce((x,y)=>x+y,0);
   const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
   const USES={'教育金':'🎓','退休金':'🏖','創業':'🚀','結婚':'💍','現金流':'💵','置業':'🏠','其他':'✏️'};
   let schemes=[],ai=0,mode='base',sel=1,geo=null;
   const S=()=>schemes[ai];
+  const wStart=()=>$('wt').value==='start';
 
   /* ---------- PDF 讀取 ---------- */
   async function readPdf(file){
@@ -238,16 +241,21 @@
     for(let i=0;i<100;i++){const m=(lo+hi)/2;if(npv(lo)*npv(m)<=0)hi=m;else lo=m;}
     return(lo+hi)/2;
   }
+  /* 單利：（總得益 ÷ 已繳保費 − 1）÷（平均收款時間 − 平均繳費時間） */
   function enrich(rows,base){
-    const pf=base.map((r,i)=>r.prem-(i?base[i-1].prem:0));
+    const pf=base.map((r,i)=>r.prem-(i?base[i-1].prem:0)),off=wStart()?1:0;
     rows.forEach((r,idx)=>{
       const n=r.y,cf=new Array(n+1).fill(0);
-      let py=0;
-      for(let t=0;t<n;t++){cf[t]-=pf[t]||0;py+=(pf[t]||0)*(n-t);}
-      for(let k=0;k<=idx;k++)cf[rows[k].y]+=rows[k].w;
+      let pT=0,wT=0;
+      for(let t=0;t<n;t++){cf[t]-=pf[t]||0;pT+=(pf[t]||0)*t;}
+      for(let k=0;k<=idx;k++){const t=Math.max(0,rows[k].y-off);cf[t]+=rows[k].w;wT+=rows[k].w*t;}
       cf[n]+=r.sv;
-      r.py=py;r.ng=r.gcv==null?null:r.sv-r.gcv;
-      r.total=r.sv+r.cumW;r.mult=r.prem?r.total/r.prem:null;r.simple=py>0?(r.total-r.prem)/py:null;r.irr=irr(cf);
+      r.ng=r.gcv==null?null:r.sv-r.gcv;
+      r.total=r.sv+r.cumW;r.mult=r.prem?r.total/r.prem:null;
+      r.tIn=r.total>0?(wT+r.sv*n)/r.total:null;r.tPay=r.prem>0?pT/r.prem:null;
+      r.dur=r.tIn!=null&&r.tPay!=null?r.tIn-r.tPay:null;
+      r.simple=r.dur>0?(r.mult-1)/r.dur:null;
+      r.irr=irr(cf);
     });
   }
   async function parseFile(file){
@@ -354,11 +362,13 @@
     if(r.gcv!=null)T.push(['其中保證金額',fmt(r.gcv)+cu],['其中非保證金額',fmt(r.ng)+cu]);
     T.push(['回報倍數',mul(r.mult)],['SI 單利',pct(r.simple)],['IRR 複利',pct(r.irr)]);
     $('tiles').innerHTML=T.map(t=>`<div class="tile${t[2]?' hi':''}"><small>${t[0]}</small><b>${t[1]}</b></div>`).join('');
+    const wl=wStart()?'年初':'年終';
     let c='【計算過程｜第 '+r.y+' 年】\n';
     c+=wd?`總得益 = 提取後退保金額 ${fmt(r.sv)} + 累計提取 ${fmt(r.cumW)} = ${fmt(r.total)}\n`:`總得益 = 退保發還金額 ${fmt(r.sv)}\n`;
     c+=`回報倍數 = ${fmt(r.total)} ÷ 已繳保費 ${fmt(r.prem)} = ${mul(r.mult)}\n`;
-    c+=`單利 =（${fmt(r.total)} − ${fmt(r.prem)}）÷ ${fmt(r.py)}（每年保費 × 持有年數的總和）= ${pct(r.simple)}\n`;
-    c+=`IRR = ${pct(r.irr)}（保費於年初繳付${wd?'，每年提取於年終收取':''}，第 ${r.y} 年終退保）`;
+    c+=`平均持有年期 = 平均收款時間 ${yrs(r.tIn)} − 平均繳費時間 ${yrs(r.tPay)} = ${yrs(r.dur)}\n`;
+    c+=`單利 =（回報倍數 − 1）÷ 平均持有年期 = ${pct(r.simple)}\n`;
+    c+=`IRR = ${pct(r.irr)}（保費於年初繳付${wd?'，每年提取於'+wl+'收取':''}，第 ${r.y} 年終退保）`;
     $('calc').textContent=c;
   }
   function msTable(){
@@ -470,20 +480,20 @@
       ws.getRow(r).height=20;r++;});
     return{next:r+1,hr};
   }
-  function xNote(ws,r,ncol,t){ws.mergeCells(r,1,r,ncol);const c=ws.getCell(r,1);c.value=t;c.font={size:9,italic:true,color:{argb:'FF64748B'}};c.alignment={wrapText:true,vertical:'top'};ws.getRow(r).height=44;}
-  const DISC='說明：總得益 = 退保金額 + 累計提取；單利 =（總得益 − 已繳保費）÷ Σ（每年保費 × 持有年數）；IRR 假設保費於年初繳付、提取及退保於年終收取。非保證金額按建議書現時假設計算，實際金額可能較高或較低，一切以保單契約及建議書為準。';
+  function xNote(ws,r,ncol,t){ws.mergeCells(r,1,r,ncol);const c=ws.getCell(r,1);c.value=t;c.font={size:9,italic:true,color:{argb:'FF64748B'}};c.alignment={wrapText:true,vertical:'top'};ws.getRow(r).height=48;}
+  const disc=()=>'說明：總得益 = 退保金額 + 累計提取；單利 =（總得益 ÷ 已繳保費 − 1）÷（平均收款時間 − 平均繳費時間）；IRR 假設保費於年初繳付、提取於'+(wStart()?'年初':'年終')+'收取、退保於年終收取。非保證金額按建議書現時假設計算，實際金額可能較高或較低，一切以保單契約及建議書為準。';
   async function xlsx(){
-    const sc=S(),wb=new ExcelJS.Workbook(),M=ms(),cu=sc.cur||'',sub=(sc.name||'')+(cu?'｜貨幣：'+cu:'')+'｜製表日期：'+new Date().toLocaleDateString('zh-HK');
+    const sc=S(),wb=new ExcelJS.Workbook(),M=ms(),cu=sc.cur||'',DISC=disc(),sub=(sc.name||'')+(cu?'｜貨幣：'+cu:'')+'｜製表日期：'+new Date().toLocaleDateString('zh-HK');
     const lastB=sc.base[sc.base.length-1];
     /* 摘要 */
-    let ws=wb.addWorksheet('摘要',{views:[{showGridLines:false}]});xInit(ws,'計劃書回報分析',sub,9);
+    let ws=wb.addWorksheet('摘要',{views:[{showGridLines:false}]});xInit(ws,'計劃書回報分析',sub,10);
     let r=xTable(ws,4,'保單資料',['項目','內容'],[['計劃名稱',sc.name],['保單貨幣',cu||'—'],['投保年齡',sc.base[0].age-1+' 歲'],['已繳總保費',lastB.prem],['提取方案合共提取',sc.wd?sc.wd[sc.wd.length-1].cumW:'沒有提取方案']],['t','n']).next;
     ws.getColumn(1).width=22;ws.getColumn(2).width=30;
     r=xTable(ws,r,'不提取｜重點年度回報',['保單年度','年齡','已繳保費','保證金額','非保證金額','退保發還金額','回報倍數','單利','IRR'],
       sc.base.filter(x=>M.includes(x.y)).map(x=>['第 '+x.y+' 年',x.age+' 歲',x.prem,x.gcv,x.ng,x.sv,x.mult,x.simple,x.irr]),['c','c','n','n','n','n','x','p','p'],[6,7,8]).next;
-    if(sc.wd)r=xTable(ws,r,'提取｜重點年度回報',['保單年度','年齡','已繳保費','當年提取','累計提取','提取後退保金額','總得益','回報倍數','單利','IRR'].slice(0,10),
+    if(sc.wd)r=xTable(ws,r,'提取｜重點年度回報',['保單年度','年齡','已繳保費','當年提取','累計提取','提取後退保金額','總得益','回報倍數','單利','IRR'],
       sc.wd.filter(x=>M.includes(x.y)).map(x=>['第 '+x.y+' 年',x.age+' 歲',x.prem,x.w,x.cumW,x.sv,x.total,x.mult,x.simple,x.irr]),['c','c','n','n','n','n','n','x','p','p'],[7,8,9]).next;
-    ws.getColumn(10).width=16;xNote(ws,r,9,DISC);
+    xNote(ws,r,10,DISC);
     /* 不提取逐年 */
     ws=wb.addWorksheet('不提取逐年');xInit(ws,'不提取｜逐年明細',sub,10);
     let t=xTable(ws,4,null,['保單年度','年齡','已繳保費','保證金額','非保證金額','退保發還金額（總額）','身故賠償額','回報倍數','單利','IRR'],
@@ -524,6 +534,7 @@
   $('name').addEventListener('change',e=>{S().name=e.target.value;render();});
   $('mBase').onclick=()=>{mode='base';render();};
   $('mWd').onclick=()=>{if(S().wd){mode='wd';render();}};
+  $('wt').onchange=()=>{schemes.forEach(s=>{if(s.wd)enrich(s.wd,s.base);});render();};
   $('sl').addEventListener('input',e=>{sel=+e.target.value;render();});
   $('chips').addEventListener('click',e=>{const y=e.target.dataset.y;if(y){sel=+y;render();}});
   ['cm','rng'].forEach(i=>$(i).onchange=draw);
