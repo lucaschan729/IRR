@@ -70,7 +70,7 @@
   </style>
   </head>
   <body>
-  <header><div class="hd"><h1>計劃書回報分析</h1><p>上傳建議書 PDF（繁體或簡體），自動讀取「不提取」及「提取」兩種情況，可上傳多份作方案對比。</p></div></header>
+  <header><div class="hd"><h1>計劃書回報分析</h1><p>上傳建議書 PDF（繁體或簡體），自動讀取「不提取」及「提取」兩種情況，可上傳多份作方案對比。檔案只在你的裝置內處理，不會上傳。</p></div></header>
   <main>
   <section>
     <h2>① 上傳建議書</h2>
@@ -114,7 +114,8 @@
       <label class="ck"><input type="checkbox" id="sG" checked> 保證金額</label>
       <label class="ck"><input type="checkbox" id="sN" checked> 非保證金額</label>
       <label class="ck"><input type="checkbox" id="sD" checked> 身故賠償額</label>
-      <label class="ck"><input type="checkbox" id="full"> 顯示全部年度</label>
+      <label class="ck"><input type="checkbox" id="full" checked> 顯示全部年度</label>
+      <button class="btn pri" id="tbCopy">複製明細</button>
     </div>
     <div class="tw"><table id="tb"><thead></thead><tbody></tbody></table></div>
   </section>
@@ -130,6 +131,7 @@
     </div>
     <div class="row" id="cpOne" style="margin-bottom:10px;font-size:13px"><span>對比項目</span><select id="cpm"></select></div>
     <div class="row" id="cpMulti" style="margin-bottom:10px;font-size:13px"><span>顯示項目</span><span class="row" id="cpk"></span></div>
+    <div class="row" style="margin-bottom:10px"><button class="btn pri" id="cpCopy">複製對比</button></div>
     <div id="cpOut"></div>
     <div class="note">★ 及金色底為該項最高值。非保證金額按建議書現時假設計算，實際金額可能較高或較低。</div>
   </section>
@@ -150,6 +152,7 @@
   const USES={'教育金':'🎓','退休金':'🏖','創業':'🚀','結婚':'💍','現金流':'💵','置業':'🏠','其他':'✏️'};
   const PAL=['#2563eb','#d97706','#0f766e','#7c3aed','#dc2626','#0891b2','#db2777','#65a30d'];
   const MET=[{k:'prem',n:'已繳保費',f:fmt,x:'n',nb:1},{k:'cumW',n:'累計提取',f:fmt,x:'n'},{k:'sv',n:'退保金額',f:fmt,x:'n'},{k:'gcv',n:'保證金額',f:fmt,x:'n'},{k:'total',n:'預期收益',f:fmt,x:'n'},{k:'mult',n:'回報倍數',f:mul,x:'x'},{k:'simple',n:'單利',f:pct,x:'p'},{k:'irr',n:'IRR 複利',f:pct,x:'p'},{k:'db',n:'身故賠償額',f:fmt,x:'n'}];
+  const DISC='非保證金額按建議書現時假設計算，實際金額可能較高或較低，一切以保單契約及建議書為準。';
   /* 簡體 → 繁體（只用於辨認頁面標題） */
   const S2T={'现':'現','举':'舉','详':'詳','细':'細','说':'說','后':'後','发':'發','还':'還','额':'額','赔':'賠','偿':'償','观':'觀','乐':'樂','单':'單','货':'貨','币':'幣','计':'計','划':'劃'};
   const toTrad=s=>s.replace(/[现举详细说后发还额赔偿观乐单货币计划]/g,c=>S2T[c]);
@@ -292,7 +295,7 @@
     const nm=t0.match(/([\u4e00-\u9fa5\w]{2,24}(?:計劃|计划)（[^）]{1,10}）)/);
     if(nm)sc.name=nm[1].replace(/^.*(有限公司|說明文件|说明文件)/,'');
     enrich(sc.base,sc.base);
-    let msg=`✅ ${sc.name}：不提取 ${sc.base.length} 個年度`;
+    let info=`結果：${sc.name}｜不提取 ${sc.base.length} 個年度`,warn='';
     if(sR.length){
       const wd=parseWS(modal(sR),sc.base,sc.hasG);
       if(wd){
@@ -300,22 +303,51 @@
         wd.forEach(r=>r.prem=pm[r.y]!==undefined?pm[r.y]:sc.base[sc.base.length-1].prem);
         const okD=xR.length?parseWDeath(modal(xR),wd):false;
         enrich(wd,sc.base);sc.wd=wd;autoSegs(sc);
-        msg+=`；提取 ${wd.length} 個年度，合共提取 ${fmt(wd[wd.length-1].cumW)}`+(okD?'':'（未能讀取提取後身故賠償）');
-      }else msg+='；⚠️ 提取頁面無法辨認欄位';
-    }else msg+='；沒有「現金提取舉例」頁面';
-    return{sc,msg,dg};
+        info+=`｜提取 ${wd.length} 個年度，合共提取 ${fmt(wd[wd.length-1].cumW)}`;
+        if(!okD)warn='未能讀取提取後的身故賠償額。';
+      }else warn='提取頁面無法辨認欄位，只能顯示不提取。';
+    }else info+='｜沒有「現金提取舉例」頁面';
+    dg.push(info);
+    return{sc,warn,dg};
   }
   async function handle(files){
     const st=$('status');st.className='status';st.textContent='讀取中，請稍候…';
-    const msgs=[],dgs=[];let added=false;
+    const msgs=[],dgs=[];let added=false,bad=false;
     for(const f of files){
-      try{const r=await parseFile(f);schemes.push(r.sc);msgs.push(r.msg);dgs.push(...r.dg);added=true;}
-      catch(e){msgs.push('❌ '+f.name+'：'+(e.msg||e.message||e));if(e.dg)dgs.push(...e.dg);}
+      try{const r=await parseFile(f);schemes.push(r.sc);if(r.warn)msgs.push('⚠️ '+r.sc.name+'：'+r.warn);dgs.push(...r.dg);added=true;}
+      catch(e){bad=true;msgs.push('❌ '+f.name+'：'+(e.msg||e.message||e));if(e.dg)dgs.push(...e.dg);}
     }
     $('diag').textContent=dgs.join('\n')||'—';
-    st.textContent=msgs.join('\n')+(added?'\n請抽查幾個年度，與建議書原文核對。':'');
+    st.textContent=msgs.join('\n');st.className='status'+(bad?' err':'')+(msgs.length?'':' hide');
     if(added){ai=schemes.length-1;mode='base';sel=Math.min(20,S().base.length);}
     render();
+  }
+
+  /* ---------- 複製 ---------- */
+  function cellTxt(td){
+    const c=td.cloneNode(true);
+    c.querySelectorAll('br').forEach(b=>b.replaceWith(' '));
+    c.querySelectorAll('small').forEach(s=>s.replaceWith(' ('+s.textContent+')'));
+    return c.textContent.replace(/\s+/g,' ').trim();
+  }
+  const grid=tb=>[...tb.rows].map(tr=>[...tr.cells].map(cellTxt));
+  function clip(t,h){
+    let p;
+    try{
+      if(h&&navigator.clipboard&&window.ClipboardItem)p=navigator.clipboard.write([new ClipboardItem({'text/plain':new Blob([t],{type:'text/plain'}),'text/html':new Blob([h],{type:'text/html'})})]);
+      else p=navigator.clipboard.writeText(t);
+    }catch(e){p=Promise.reject(e);}
+    p.catch(()=>navigator.clipboard.writeText(t)).then(()=>alert('已複製')).catch(()=>prompt('請手動複製：',t));
+  }
+  function copyOut(title,blocks,extra){
+    let t=title+'\n',h=`<p><b>${esc(title)}</b></p>`;
+    blocks.forEach(b=>{
+      if(b.h){t+='\n'+b.h+'\n';h+=`<p><b>${esc(b.h)}</b></p>`;}
+      t+=b.g.map(r=>r.join('\t')).join('\n')+'\n';
+      h+='<table border="1" cellpadding="4" style="border-collapse:collapse">'+b.g.map((r,i)=>'<tr>'+r.map(c=>i?`<td>${esc(c)}</td>`:`<th>${esc(c)}</th>`).join('')+'</tr>').join('')+'</table>';
+    });
+    const n='*'+(extra||'')+DISC;t+='\n'+n;h+=`<p>${esc(n)}</p>`;
+    clip(t,h);
   }
 
   /* ---------- 顯示 ---------- */
@@ -479,76 +511,103 @@
   }
 
   /* ---------- Excel ---------- */
-  const NAVY='FF0F172A',GOLD='FFD97706',SOFT='FFFFFBEB',ZEB='FFF8FAFC',LN='FFCBD5E1',WH='FFFFFFFF';
+  const X={navy:'FF0F172A',gold:'FFB45309',teal:'FF0F766E',blue:'FF1D4ED8',soft:'FFFFFBEB',key:'FFFEF3C7',zeb:'FFF8FAFC',ln:'FFD5DCE6',wh:'FFFFFFFF',mut:'FF64748B'};
+  const GR={A:{n:'基本資料',d:X.navy,l:'FFE2E8F0'},D:{n:'提取安排',d:X.blue,l:'FFDBEAFE'},B:{n:'保單價值',d:X.teal,l:'FFCCFBF1'},C:{n:'回報分析',d:X.gold,l:'FFFEF3C7'}};
+  const FN='Arial';
   const fill=c=>({type:'pattern',pattern:'solid',fgColor:{argb:c}});
-  const bd={style:'thin',color:{argb:LN}},BD={top:bd,left:bd,bottom:bd,right:bd};
-  const NF={n:'#,##0',p:'0.00%',x:'0.00"倍"'};
-  function xInit(ws,title,sub,ncol,w){
-    for(let i=1;i<=ncol;i++)ws.getColumn(i).width=w||16;
-    ws.mergeCells(1,1,1,ncol);let c=ws.getCell(1,1);c.value=title;c.font={bold:true,size:16,color:{argb:WH}};c.fill=fill(NAVY);c.alignment={vertical:'middle',indent:1};ws.getRow(1).height=36;
-    ws.mergeCells(2,1,2,ncol);c=ws.getCell(2,1);c.value=sub;c.font={size:10,bold:true,color:{argb:WH}};c.fill=fill(GOLD);c.alignment={vertical:'middle',indent:1};ws.getRow(2).height=22;
-    ws.pageSetup={orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0};
+  const bd={style:'thin',color:{argb:X.ln}},BD={top:bd,left:bd,bottom:bd,right:bd};
+  const wbd={style:'medium',color:{argb:X.wh}},WB={left:wbd,right:wbd};
+  const NF={n:'#,##0;[Red]-#,##0',p:'0.00%;[Red]-0.00%',x:'0.00"倍";[Red]-0.00"倍"'};
+  function xInit(ws,title,sub,ncol,w,tab){
+    for(let i=1;i<=ncol;i++)ws.getColumn(i).width=w||15;
+    ws.mergeCells(1,1,1,ncol);let c=ws.getCell(1,1);c.value=title;c.font={name:FN,bold:true,size:18,color:{argb:X.wh}};c.fill=fill(X.navy);c.alignment={vertical:'middle',indent:1};ws.getRow(1).height=38;
+    ws.mergeCells(2,1,2,ncol);c=ws.getCell(2,1);c.value=sub;c.font={name:FN,size:10,bold:true,color:{argb:X.wh}};c.fill=fill(X.gold);c.alignment={vertical:'middle',indent:1};ws.getRow(2).height=22;
+    ws.getRow(3).height=8;
+    ws.pageSetup={orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0,margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2}};
+    ws.headerFooter.oddFooter='&C第 &P 頁，共 &N 頁';
+    ws.properties.tabColor={argb:tab||X.navy};
   }
-  function xTable(ws,r,title,head,data,f,hl,opt){
-    opt=opt||{};
-    if(title){ws.mergeCells(r,1,r,head.length);const c=ws.getCell(r,1);c.value=title;c.font={bold:true,size:12,color:{argb:NAVY}};c.fill=fill(SOFT);c.border={bottom:{style:'medium',color:{argb:GOLD}}};c.alignment={vertical:'middle',indent:1};ws.getRow(r).height=26;r++;}
-    head.forEach((h,i)=>{const c=ws.getCell(r,i+1);c.value=h;c.font={bold:true,size:10,color:{argb:WH}};c.fill=fill(opt.hc&&opt.hc[i]?opt.hc[i]:NAVY);c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.border=BD;});
-    ws.getRow(r).height=32;const hr=r;r++;
+  function xCards(ws,r,cards,span){
+    cards.forEach((q,i)=>{const c1=i*span+1,c2=c1+span-1;
+      [0,1].forEach(d=>{if(c2>c1)ws.mergeCells(r+d,c1,r+d,c2);const c=ws.getCell(r+d,c1);c.value=q[d];c.fill=fill(X.soft);c.border=WB;c.alignment={horizontal:'center',vertical:'middle'};
+        c.font=d?{name:FN,bold:true,size:14,color:{argb:X.gold}}:{name:FN,size:9,color:{argb:X.mut}};if(d&&typeof q[1]==='number')c.numFmt='#,##0';});});
+    ws.getRow(r).height=20;ws.getRow(r+1).height=30;ws.getRow(r+2).height=10;return r+3;
+  }
+  function xCell(c,v,t,st){
+    const bad=v==null||(typeof v==='number'&&!isFinite(v));
+    c.value=bad?'—':v;c.border=BD;
+    if(NF[t]&&!bad&&typeof v==='number')c.numFmt=st.star?'"★ "'+NF[t].split(';')[0]:NF[t];
+    const al=bad||t==='c'?'center':t==='t'?'left':'right';
+    c.alignment={horizontal:al,vertical:'middle',wrapText:t==='t'};if(al!=='center')c.alignment.indent=1;
+    c.font={name:FN,size:11,bold:!!st.bold,color:{argb:st.color||X.navy}};
+    if(st.fill)c.fill=fill(st.fill);
+  }
+  /* cols：[標題, 格式, 分組]；o：{title, grp, hc, best, key, bold, hh} */
+  function xTable(ws,r,cols,data,o){
+    o=o||{};const n=cols.length;
+    if(o.title){ws.mergeCells(r,1,r,n);const c=ws.getCell(r,1);c.value=o.title;c.font={name:FN,bold:true,size:13,color:{argb:X.navy}};c.alignment={vertical:'middle'};c.border={bottom:{style:'medium',color:{argb:X.gold}}};ws.getRow(r).height=28;r++;}
+    if(o.grp){
+      let i=0;
+      while(i<n){let j=i;while(j+1<n&&cols[j+1][2]===cols[i][2])j++;if(j>i)ws.mergeCells(r,i+1,r,j+1);
+        const g=GR[cols[i][2]],c=ws.getCell(r,i+1);c.value=g.n;c.font={name:FN,bold:true,size:11,color:{argb:X.wh}};c.fill=fill(g.d);c.alignment={horizontal:'center',vertical:'middle'};c.border=WB;i=j+1;}
+      ws.getRow(r).height=22;r++;
+    }
+    cols.forEach((q,i)=>{const c=ws.getCell(r,i+1),dark=o.hc&&o.hc[i]?o.hc[i]:o.grp?null:X.navy;
+      c.value=q[0];c.fill=fill(dark||GR[q[2]].l);c.font={name:FN,bold:true,size:10,color:{argb:dark?X.wh:X.navy}};c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.border=BD;});
+    ws.getRow(r).height=o.hh||34;const hr=r;r++;
     data.forEach((d,k)=>{
-      const nums=d.slice(1).filter(v=>typeof v==='number'&&isFinite(v)),mxv=opt.best&&nums.length>1?Math.max(...nums):null;
-      d.forEach((v,i)=>{const c=ws.getCell(r,i+1),bad=v==null||(typeof v==='number'&&!isFinite(v)),t=f[i]||'t';
-        const top=mxv!=null&&i>=1&&v===mxv,em=top||(hl&&hl.includes(i));
-        c.value=bad?'—':v;c.border=BD;if(NF[t]&&!bad)c.numFmt=NF[t];
-        c.alignment={horizontal:bad?'center':t==='t'?'left':t==='c'?'center':'right',vertical:'middle'};
-        c.font={size:10,bold:!!em,color:{argb:em?GOLD:NAVY}};
-        if(top)c.fill=fill(SOFT);else if(k%2)c.fill=fill(ZEB);});
-      ws.getRow(r).height=20;r++;});
+      const key=o.key&&o.key(d);let mx=null;
+      if(o.best){const ns=d.slice(1).filter(v=>typeof v==='number'&&isFinite(v));if(ns.length>1)mx=Math.max(...ns);}
+      d.forEach((v,i)=>{const top=mx!=null&&i>=1&&v===mx,ret=o.grp&&cols[i][2]==='C';
+        xCell(ws.getCell(r,i+1),v,cols[i][1],{bold:top||ret||key||(o.bold&&o.bold.includes(i)),color:top||ret?X.gold:null,fill:top||key?X.key:k%2?X.zeb:null,star:top});});
+      ws.getRow(r).height=22;r++;});
     return{next:r+1,hr};
   }
-  function xNote(ws,r,ncol,t,h){ws.mergeCells(r,1,r,ncol);const c=ws.getCell(r,1);c.value=t;c.font={size:9,italic:true,color:{argb:'FF64748B'}};c.alignment={wrapText:true,vertical:'top'};ws.getRow(r).height=h||30;}
-  const DISC='非保證金額按建議書現時假設計算，實際金額可能較高或較低，一切以保單契約及建議書為準。';
+  function xBar(ws,r,ncol,t){ws.mergeCells(r,1,r,ncol);const c=ws.getCell(r,1);c.value=t;c.font={name:FN,bold:true,size:12,color:{argb:X.navy}};c.fill=fill(X.key);c.alignment={vertical:'middle',indent:1,wrapText:true};ws.getRow(r).height=32;return r+2;}
+  function xNote(ws,r,ncol,t){ws.mergeCells(r,1,r,ncol);const c=ws.getCell(r,1);c.value=t;c.font={name:FN,size:9,italic:true,color:{argb:X.mut}};c.alignment={wrapText:true,vertical:'top'};ws.getRow(r).height=30;}
   async function xlsx(){
     const sc=S(),wb=new ExcelJS.Workbook(),M=ms(),cu=sc.cur||'',today=new Date().toLocaleDateString('zh-HK'),sub=(sc.name||'')+(cu?'｜貨幣：'+cu:'')+'｜製表日期：'+today;
-    const lastB=sc.base[sc.base.length-1];
+    const lastB=sc.base[sc.base.length-1],py=sc.base.filter((x,i)=>x.prem>(i?sc.base[i-1].prem:0)).length;
+    const A3=[['保單年度','c','A'],['年齡','c','A'],['已繳保費','n','A']],RC=[['預期收益','n','C'],['回報倍數','x','C'],['單利','p','C'],['IRR 複利','p','C']];
+    const cB=A3.concat([['保證金額','n','B'],['非保證金額','n','B'],['退保發還金額','n','B']],RC);
+    const cW=A3.concat([['當年提取','n','D'],['累計提取','n','D'],['提取後退保金額','n','B']],RC);
+    const cBF=A3.concat([['保證金額','n','B'],['非保證金額','n','B'],['退保發還金額（總額）','n','B'],['身故賠償額','n','B']],RC);
+    const cWF=A3.concat([['當年提取','n','D'],['累計提取','n','D'],['保證金額','n','B'],['非保證金額','n','B'],['提取後退保金額（總額）','n','B'],['提取後身故賠償額','n','B']],RC);
+    const keyNote='金色底為重點年度。'+DISC;
     /* 摘要 */
-    let ws=wb.addWorksheet('摘要',{views:[{showGridLines:false}]});xInit(ws,'計劃書回報分析',sub,10);
-    let r=xTable(ws,4,'保單資料',['項目','內容'],[['計劃名稱',sc.name],['保單貨幣',cu||'—'],['投保年齡',sc.base[0].age-1+' 歲'],['已繳總保費',lastB.prem],['提取方案合共提取',sc.wd?sc.wd[sc.wd.length-1].cumW:'沒有提取方案']],['t','n']).next;
-    ws.getColumn(1).width=22;ws.getColumn(2).width=30;
-    r=xTable(ws,r,'不提取｜重點年度回報',['保單年度','年齡','已繳保費','保證金額','非保證金額','退保發還金額','預期收益','回報倍數','單利','IRR'],
-      sc.base.filter(x=>M.includes(x.y)).map(x=>['第 '+x.y+' 年',x.age+' 歲',x.prem,x.gcv,x.ng,x.sv,x.total,x.mult,x.simple,x.irr]),['c','c','n','n','n','n','n','x','p','p'],[6,7,8,9]).next;
-    if(sc.wd)r=xTable(ws,r,'提取｜重點年度回報',['保單年度','年齡','已繳保費','當年提取','累計提取','提取後退保金額','預期收益','回報倍數','單利','IRR'],
-      sc.wd.filter(x=>M.includes(x.y)).map(x=>['第 '+x.y+' 年',x.age+' 歲',x.prem,x.w,x.cumW,x.sv,x.total,x.mult,x.simple,x.irr]),['c','c','n','n','n','n','n','x','p','p'],[6,7,8,9]).next;
+    let ws=wb.addWorksheet('摘要',{views:[{showGridLines:false}]});xInit(ws,'計劃書回報分析',sub,10,15,X.navy);
+    let r=xCards(ws,4,[['保單貨幣',cu||'—'],['投保年齡',(sc.base[0].age-1)+' 歲'],['繳費年期',py===1?'整付':py+' 年'],['已繳總保費',lastB.prem],['提取方案合共提取',sc.wd?sc.wd[sc.wd.length-1].cumW:'—']],2);
+    r=xTable(ws,r,cB,sc.base.filter(x=>M.includes(x.y)).map(x=>['第 '+x.y+' 年',x.age+' 歲',x.prem,x.gcv,x.ng,x.sv,x.total,x.mult,x.simple,x.irr]),{title:'不提取｜重點年度回報',grp:true}).next;
+    if(sc.wd)r=xTable(ws,r,cW,sc.wd.filter(x=>M.includes(x.y)).map(x=>['第 '+x.y+' 年',x.age+' 歲',x.prem,x.w,x.cumW,x.sv,x.total,x.mult,x.simple,x.irr]),{title:'提取｜重點年度回報',grp:true}).next;
     xNote(ws,r,10,DISC);
     /* 不提取逐年 */
-    ws=wb.addWorksheet('不提取逐年');xInit(ws,'不提取｜逐年明細',sub,11);
-    let t=xTable(ws,4,null,['保單年度','年齡','已繳保費','保證金額','非保證金額','退保發還金額（總額）','身故賠償額','預期收益','回報倍數','單利','IRR'],
-      sc.base.map(x=>[x.y,x.age,x.prem,x.gcv,x.ng,x.sv,x.db,x.total,x.mult,x.simple,x.irr]),['c','c','n','n','n','n','n','n','x','p','p'],[7,8,9,10]);
-    ws.views=[{state:'frozen',xSplit:2,ySplit:t.hr,showGridLines:false}];xNote(ws,t.next,11,DISC);
+    ws=wb.addWorksheet('不提取逐年');xInit(ws,'不提取｜逐年明細',sub,11,15,X.teal);
+    let t=xTable(ws,4,cBF,sc.base.map(x=>[x.y,x.age,x.prem,x.gcv,x.ng,x.sv,x.db,x.total,x.mult,x.simple,x.irr]),{grp:true,key:d=>M.includes(d[0])});
+    ws.views=[{state:'frozen',xSplit:2,ySplit:t.hr,showGridLines:false}];ws.pageSetup.printTitlesRow=(t.hr-1)+':'+t.hr;xNote(ws,t.next,11,keyNote);
     /* 提取 */
     if(sc.wd){
-      ws=wb.addWorksheet('提取逐年');xInit(ws,'提取｜逐年明細',sub,13);
-      t=xTable(ws,4,null,['保單年度','年齡','已繳保費','當年提取','累計提取','保證金額','非保證金額','提取後退保金額（總額）','提取後身故賠償額','預期收益','回報倍數','單利','IRR'],
-        sc.wd.map(x=>[x.y,x.age,x.prem,x.w,x.cumW,x.gcv,x.ng,x.sv,x.db,x.total,x.mult,x.simple,x.irr]),['c','c','n','n','n','n','n','n','n','n','x','p','p'],[9,10,11,12]);
-      ws.views=[{state:'frozen',xSplit:2,ySplit:t.hr,showGridLines:false}];xNote(ws,t.next,13,DISC);
-      ws=wb.addWorksheet('提取用途規劃摘要',{views:[{showGridLines:false}]});xInit(ws,'提取用途規劃摘要',sub,7,18);
-      const last=sc.wd[sc.wd.length-1];
-      r=xTable(ws,4,'各時段用途',['用途','年齡','保單年度','每年提取','提取年數','合共提取','備註'],
-        sc.segs.map(s=>{const st=sstat(sc,s);return[(USES[s.use]||'')+' '+s.use,aLab(st),yLab(s),Math.round(st.avg),st.n+' 年',st.t,s.note||''];}),['t','c','c','n','c','n','t'],[5]).next;
-      r=xTable(ws,r,'總結',['項目','金額'],[['已繳總保費',last.prem],['合共已提取',last.cumW],[last.age+' 歲時保單餘額',last.sv],['預期收益',last.total]],['t','n'],[1]).next;
-      ws.getColumn(1).width=28;ws.getColumn(7).width=28;xNote(ws,r,7,foot(sc)+'\n'+DISC,40);
+      ws=wb.addWorksheet('提取逐年');xInit(ws,'提取｜逐年明細',sub,13,15,X.blue);
+      t=xTable(ws,4,cWF,sc.wd.map(x=>[x.y,x.age,x.prem,x.w,x.cumW,x.gcv,x.ng,x.sv,x.db,x.total,x.mult,x.simple,x.irr]),{grp:true,key:d=>M.includes(d[0])});
+      ws.views=[{state:'frozen',xSplit:2,ySplit:t.hr,showGridLines:false}];ws.pageSetup.printTitlesRow=(t.hr-1)+':'+t.hr;xNote(ws,t.next,13,keyNote);
+      ws=wb.addWorksheet('提取用途規劃摘要',{views:[{showGridLines:false}]});xInit(ws,'提取用途規劃摘要',sub,7,16,X.gold);
+      ws.getColumn(1).width=22;ws.getColumn(7).width=30;
+      r=xTable(ws,4,[['用途','t'],['年齡','c'],['保單年度','c'],['每年提取','n'],['提取年數','c'],['合共提取','n'],['備註','t']],
+        sc.segs.map(s=>{const st=sstat(sc,s);return[(USES[s.use]||'')+' '+s.use,aLab(st),yLab(s),Math.round(st.avg),st.n+' 年',st.t,s.note||''];}),{bold:[0,5]}).next;
+      r=xBar(ws,r,7,foot(sc));xNote(ws,r,7,DISC);
     }
     /* 方案對比 */
     const V=variants(),P=cpPts(),A2=byAge();
     if(V.length>=2&&P.length){
-      ws=wb.addWorksheet('方案對比',{views:[{showGridLines:false}]});xInit(ws,'方案對比',(A2?'按年齡':'按保單年度')+'對比各方案｜製表日期：'+today,V.length+1,24);
-      const head=[A2?'年齡':'保單年度'].concat(V.map(v=>v.l+'\n'+v.t)),hc=[null].concat(V.map(v=>'FF'+v.c.slice(1).toUpperCase()));
+      ws=wb.addWorksheet('方案對比',{views:[{showGridLines:false}]});xInit(ws,'方案對比',(A2?'按年齡':'按保單年度')+'對比各方案｜製表日期：'+today,V.length+1,24,'FF7C3AED');
+      ws.getColumn(1).width=14;
+      const hc=[null].concat(V.map(v=>'FF'+v.c.slice(1).toUpperCase()));
       let K=cpMets();const one=MET.find(m=>m.k===$('cpm').value);if(!K.includes(one))K.push(one);
       K=MET.filter(m=>K.includes(m));r=4;
       K.forEach(m=>{
         const data=[];
         P.forEach(p=>{const rs=V.map(v=>cpRow(v,p));if(rs.every(x=>!x))return;data.push([A2?p+' 歲':'第 '+p+' 年'].concat(rs.map(x=>val(x,m.k))));});
-        const o=xTable(ws,r,m.n,head,data,['c'].concat(V.map(()=>m.x)),null,{hc,best:!m.nb});ws.getRow(o.hr).height=44;r=o.next;});
-      xNote(ws,r,V.length+1,'金色為該行最高值。'+DISC);
+        r=xTable(ws,r,[[A2?'年齡':'保單年度','c']].concat(V.map(v=>[v.l+'\n'+v.t,m.x])),data,{title:m.n,hc,best:!m.nb,hh:46,bold:[0]}).next;});
+      xNote(ws,r,V.length+1,'★ 及金色底為該行最高值。'+DISC);
     }
     const buf=await wb.xlsx.writeBuffer(),a=document.createElement('a');
     a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
@@ -558,7 +617,7 @@
   /* ---------- 事件 ---------- */
   $('file').addEventListener('change',e=>{const f=[...e.target.files];if(f.length)handle(f);e.target.value='';});
   $('sch').addEventListener('click',e=>{const s=e.target.dataset.s;if(s!==undefined){ai=+s;render();}});
-  $('schDel').onclick=()=>{if(confirm('移除此方案？')){schemes.splice(ai,1);ai=0;render();if(!schemes.length)$('status').textContent='尚未上傳檔案。';}};
+  $('schDel').onclick=()=>{if(confirm('移除此方案？')){schemes.splice(ai,1);ai=0;render();if(!schemes.length){$('status').className='status';$('status').textContent='尚未上傳檔案。';}}};
   $('name').addEventListener('change',e=>{S().name=e.target.value;render();});
   $('mBase').onclick=()=>{mode='base';render();};
   $('mWd').onclick=()=>{if(S().wd){mode='wd';render();}};
@@ -568,15 +627,22 @@
   $('ms').addEventListener('change',render);
   const pick=e=>{const tr=e.target.closest('tr[data-y]');if(tr){sel=+tr.dataset.y;render();}};
   $('tb').addEventListener('click',pick);$('mt').addEventListener('click',pick);
+  $('tbCopy').onclick=()=>copyOut((S().name||'儲蓄計劃')+'｜'+(isWd()?'提取':'不提取')+'｜逐年明細'+(S().cur?'（'+S().cur+'）':''),[{h:null,g:grid($('tb'))}]);
   $('pt').addEventListener('change',e=>{const i=e.target.dataset.i,k=e.target.dataset.k;if(i===undefined)return;S().segs[i][k]=e.target.value;});
   $('pt').addEventListener('click',e=>{const d=e.target.dataset.sp;if(d!==undefined)splitSeg(+d);});
   $('pAuto').onclick=()=>{autoSegs(S());render();};
-  $('pCopy').onclick=()=>{const t=planText();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>alert('已複製摘要')).catch(()=>prompt('請手動複製：',t));};
+  $('pCopy').onclick=()=>clip(planText());
   $('cpv').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const c=schemes[+b.dataset.si].cmp;c[b.dataset.k]=!c[b.dataset.k];renderCmp();});
   ['cpt','cpm'].forEach(i=>$(i).onchange=renderCmp);
   $('cpb').onchange=()=>{$('cpp').value=byAge()?'30,40,50,60,65,70,80':'10,20,30,40,50';renderCmp();};
   $('cpp').addEventListener('change',renderCmp);
   $('cpk').addEventListener('change',renderCmp);
+  $('cpCopy').onclick=()=>{
+    const multi=$('cpt').value==='multi',B=[];let h=null;
+    [...$('cpOut').children].forEach(el=>{if(el.classList.contains('cph'))h=el.textContent;else if(el.classList.contains('tw')){B.push({h,g:grid(el.querySelector('table'))});h=null;}});
+    if(!B.length){alert('沒有可複製的對比內容。');return;}
+    copyOut('方案對比｜'+(multi?'綜合對比':MET.find(m=>m.k===$('cpm').value).n)+'｜'+(byAge()?'按年齡':'按保單年度'),B,'★ 為該項最高值。');
+  };
   $('xl').onclick=()=>xlsx().catch(e=>alert('匯出失敗：'+e.message));
   </script>
   </body>
