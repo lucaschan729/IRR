@@ -1,3 +1,4 @@
+  <!DOCTYPE html>
   <html lang="zh-HK">
   <head>
   <meta charset="utf-8">
@@ -70,7 +71,7 @@
   </style>
   </head>
   <body>
-  <header><div class="hd"><h1>計劃書回報分析</h1><p>上傳建議書 PDF（繁體或簡體），自動讀取「不提取」及「提取」兩種情況，可上傳多份作方案對比。</p></div></header>
+  <header><div class="hd"><h1>計劃書回報分析</h1><p>上傳建議書 PDF（繁體或簡體），自動讀取「不提取」及「提取」兩種情況，可上傳多份作方案對比。檔案只在你的裝置內處理，不會上傳。</p></div></header>
   <main>
   <section>
     <h2>① 上傳建議書</h2>
@@ -95,9 +96,9 @@
 
   <section>
     <h2>③ 重點年度回報</h2>
-    <div class="row" style="margin-bottom:10px;font-size:13px"><span>重點年度（保單年度，以逗號分隔）</span><input type="text" id="ms" value="5,10,15,20,25,30,40,50,60,70" style="flex:1;min-width:200px"></div>
+    <div class="row" style="margin-bottom:10px;font-size:13px"><span>重點年度（保單年度，以逗號分隔）</span><input type="text" id="ms" value="5,10,15,20,25,30,40,50,60,70,80,90,100" style="flex:1;min-width:200px"><button class="btn pri" id="mtCopy">複製重點年度</button></div>
     <div class="tw"><table id="mt"><thead></thead><tbody></tbody></table></div>
-    <div class="note">點擊表格任何一行可選擇該年度。非保證金額按建議書現時假設計算，實際金額可能較高或較低。</div>
+    <div class="note">點擊表格任何一行可選擇該年度。超出建議書的年度會自動略過，並改為顯示最後一個保單年度。非保證金額按建議書現時假設計算，實際金額可能較高或較低。</div>
   </section>
 
   <section id="planSec" class="hide">
@@ -133,7 +134,7 @@
     <div class="row" id="cpMulti" style="margin-bottom:10px;font-size:13px"><span>顯示項目</span><span class="row" id="cpk"></span></div>
     <div class="row" style="margin-bottom:10px"><button class="btn pri" id="cpCopy">複製對比</button></div>
     <div id="cpOut"></div>
-    <div class="note">★ 及金色底為該項最高值。非保證金額按建議書現時假設計算，實際金額可能較高或較低。</div>
+    <div class="note">★ 及金色底為該項最高值。</div>
   </section>
   </div>
 
@@ -151,7 +152,7 @@
   const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
   const USES={'教育金':'🎓','退休金':'🏖','創業':'🚀','結婚':'💍','現金流':'💵','置業':'🏠','其他':'✏️'};
   const PAL=['#2563eb','#d97706','#0f766e','#7c3aed','#dc2626','#0891b2','#db2777','#65a30d'];
-  const MET=[{k:'prem',n:'已繳保費',f:fmt,x:'n',nb:1},{k:'cumW',n:'累計提取',f:fmt,x:'n'},{k:'sv',n:'退保金額',f:fmt,x:'n'},{k:'gcv',n:'保證金額',f:fmt,x:'n'},{k:'total',n:'預期收益',f:fmt,x:'n'},{k:'mult',n:'回報倍數',f:mul,x:'x'},{k:'simple',n:'單利',f:pct,x:'p'},{k:'irr',n:'IRR 複利',f:pct,x:'p'},{k:'db',n:'身故賠償額',f:fmt,x:'n'}];
+  const MET=[{k:'prem',n:'已繳保費',f:fmt,x:'n',nb:1},{k:'cumW',n:'累計提取',f:fmt,x:'n'},{k:'sv',n:'退保金額',f:fmt,x:'n'},{k:'gcv',n:'保證金額',f:fmt,x:'n'},{k:'ng',n:'非保證金額',f:fmt,x:'n'},{k:'total',n:'預期收益',f:fmt,x:'n'},{k:'mult',n:'回報倍數',f:mul,x:'x'},{k:'simple',n:'單利',f:pct,x:'p'},{k:'irr',n:'IRR 複利',f:pct,x:'p'},{k:'db',n:'身故賠償額',f:fmt,x:'n'}];
   const DISC='非保證金額按建議書現時假設計算，實際金額可能較高或較低，一切以保單契約及建議書為準。';
   /* 簡體 → 繁體（只用於辨認頁面標題） */
   const S2T={'现':'現','举':'舉','详':'詳','细':'細','说':'說','后':'後','发':'發','还':'還','额':'額','赔':'賠','偿':'償','观':'觀','乐':'樂','单':'單','货':'貨','币':'幣','计':'計','划':'劃'};
@@ -159,7 +160,7 @@
   let schemes=[],ai=0,mode='base',sel=1;
   const S=()=>schemes[ai];
   $('cpm').innerHTML=MET.filter(m=>!m.nb).map(m=>`<option value="${m.k}"${m.k==='total'?' selected':''}>${m.n}</option>`).join('');
-  $('cpk').innerHTML=MET.map(m=>`<label class="ck"><input type="checkbox" data-k="${m.k}"${['gcv','db'].includes(m.k)?'':' checked'}> ${m.n}</label>`).join('');
+  $('cpk').innerHTML=MET.map(m=>`<label class="ck"><input type="checkbox" data-k="${m.k}"${['gcv','ng','db'].includes(m.k)?'':' checked'}> ${m.n}</label>`).join('');
 
   /* ---------- PDF 讀取 ---------- */
   async function readPdf(file){
@@ -354,7 +355,13 @@
   const rows=()=>mode==='wd'&&S().wd?S().wd:S().base;
   const isWd=()=>mode==='wd'&&!!S().wd;
   const plist=s=>{const a=s.split(/[,，、\s]+/).map(Number).filter(v=>Number.isInteger(v)&&v>0);return[...new Set(a)].sort((x,y)=>x-y);};
-  const ms=()=>plist($('ms').value);
+  /* 重點年度：超出建議書的年度自動略過，並改為顯示最後一個保單年度 */
+  function ms(){
+    const a=plist($('ms').value);if(!schemes.length)return a;
+    const b=S().base,mx=b[b.length-1].y,o=a.filter(y=>y<=mx);
+    if(a.some(y=>y>mx)&&!o.includes(mx))o.push(mx);
+    return o;
+  }
   function tiles(r){
     const cu=S().cur?' '+S().cur:'',T=[],wd=isWd();
     T.push(['已繳總保費',fmt(r.prem)+cu]);
@@ -627,7 +634,12 @@
   $('ms').addEventListener('change',render);
   const pick=e=>{const tr=e.target.closest('tr[data-y]');if(tr){sel=+tr.dataset.y;render();}};
   $('tb').addEventListener('click',pick);$('mt').addEventListener('click',pick);
-  $('tbCopy').onclick=()=>copyOut((S().name||'儲蓄計劃')+'｜'+(isWd()?'提取':'不提取')+'｜逐年明細'+(S().cur?'（'+S().cur+'）':''),[{h:null,g:grid($('tb'))}]);
+  const cpTitle=n=>(S().name||'儲蓄計劃')+'｜'+(isWd()?'提取':'不提取')+'｜'+n+(S().cur?'（'+S().cur+'）':'');
+  $('mtCopy').onclick=()=>{
+    if(!$('mt').querySelector('tr[data-y]')){alert('沒有可複製的重點年度。');return;}
+    copyOut(cpTitle('重點年度回報'),[{h:null,g:grid($('mt'))}]);
+  };
+  $('tbCopy').onclick=()=>copyOut(cpTitle('逐年明細'),[{h:null,g:grid($('tb'))}]);
   $('pt').addEventListener('change',e=>{const i=e.target.dataset.i,k=e.target.dataset.k;if(i===undefined)return;S().segs[i][k]=e.target.value;});
   $('pt').addEventListener('click',e=>{const d=e.target.dataset.sp;if(d!==undefined)splitSeg(+d);});
   $('pAuto').onclick=()=>{autoSegs(S());render();};
