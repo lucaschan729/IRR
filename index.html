@@ -107,6 +107,9 @@
   .sl{font-size:14px;font-weight:700;margin-bottom:10px}
   .sl b{display:inline-block;background:var(--navy);color:#fff;border-radius:6px;padding:2px 8px;font-size:12px;margin-right:8px}
   .sl small{font-weight:400;color:var(--mut)}
+  .xlbox{margin-top:12px;border:1px solid #fcd34d;background:var(--soft);border-radius:12px;padding:14px 16px}
+  #xlList{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+  #xlList label{font-size:14px}
   .adv{text-align:center;margin:4px 0 18px}
   .adv button{border:1px dashed var(--line2);background:transparent;color:var(--mut);border-radius:999px;padding:8px 18px;font-size:13px;cursor:pointer;font-family:inherit}
   .adv button:hover{color:var(--navy);border-color:var(--navy)}
@@ -126,6 +129,11 @@
     <div id="schBox" class="hide" style="margin-top:14px">
       <div class="chips" id="sch"></div>
       <div class="row"><span style="font-size:13px">方案名稱</span><input type="text" id="name" style="flex:1;min-width:200px"><button class="btn" id="schDel">移除此方案</button><button class="btn gold" id="xl">⬇ 匯出 Excel</button></div>
+      <div id="xlBox" class="xlbox hide">
+        <div class="sl">匯出哪些方案？<small>（可多選；多於一個時會放在同一個 Excel 檔，每個方案各有自己的分頁）</small></div>
+        <div id="xlList"></div>
+        <div class="row"><button class="btn" id="xlAll">全選</button><button class="btn gold" id="xlGo">⬇ 匯出所選方案</button><button class="btn" id="xlX">取消</button></div>
+      </div>
     </div>
   </section>
 
@@ -158,7 +166,7 @@
     <div class="row msr" id="msRW"><span class="tag w">提取</span><span>重點保單年度</span><input type="text" id="msW" value="5,10,15,20,25,30,40,50,60,70,80,90,100"></div>
     <div class="row" style="margin:10px 0"><button class="btn pri" id="mtCopy">複製重點年度</button></div>
     <div class="tw"><table id="mt"><thead></thead><tbody></tbody></table></div>
-    <div class="note">以逗號分隔。下表顯示上方所選模式（不提取／提取）的重點年度；點擊表格任何一行可選擇該年度。匯出 Excel 時兩組年度亦分開處理。</div>
+    <div class="note">以逗號分隔。下表顯示上方所選模式（不提取／提取）的重點年度；點擊表格任何一行可選擇該年度。匯出 Excel 時，摘要的「不提取」部分使用重點年度，「提取」部分則按建議書的提取時段顯示。</div>
   </section>
 
   <section id="planSec" class="hide">
@@ -478,6 +486,7 @@
   }
   async function handle(files){
     const st=$('status');st.className='status';st.textContent='讀取中，請稍候…';
+    $('xlBox').classList.add('hide');
     const msgs=[],dgs=[];let added=false,bad=false,failMap=false;
     for(const f of files){
       try{const r=await parseFile(f);schemes.push(r.sc);if(r.warn)msgs.push('⚠️ '+r.sc.name+'：'+r.warn);dgs.push(...r.dg);added=true;pend={name:r.sc.name,pages:r.pages,G:groups(r.pages)};failMap=false;}
@@ -531,6 +540,7 @@
       const R=g.rows.map(r=>{const w=iw>=0?r[iw]:r[ic]-cum;cum+=w;return{y:r[iy],age:ia>=0?r[ia]:r[iy],w,cumW:cum,sv:r[is],gcv:ig>=0?r[ig]:null,db:id>=0?r[id]:null};});
       attachWd(S(),R);S().scn.wd={};mode='wd';err('');toast('已把提取表格加到「'+S().name+'」');
     }
+    $('xlBox').classList.add('hide');
     render();
   }
 
@@ -821,44 +831,72 @@
   }
   function xBar(ws,r,ncol,t){ws.mergeCells(r,1,r,ncol);const c=ws.getCell(r,1);c.value=t;c.font={name:FN,bold:true,size:12,color:{argb:X.navy}};c.fill=fill(X.key);c.alignment={vertical:'middle',indent:1,wrapText:true};ws.getRow(r).height=32;return r+2;}
   function xNote(ws,r,ncol,t){ws.mergeCells(r,1,r,ncol);const c=ws.getCell(r,1);c.value=t;c.font={name:FN,size:9,italic:true,color:{argb:X.mut}};c.alignment={wrapText:true,vertical:'top'};ws.getRow(r).height=30;}
-  async function xlsx(){
-    const sc=S(),wb=new ExcelJS.Workbook(),MB=ms('base'),MW=ms('wd'),cu=sc.cur||'',today=new Date().toLocaleDateString('zh-HK'),sub=(sc.name||'')+(cu?'｜貨幣：'+cu:'')+'｜製表日期：'+today;
-    const lastB=sc.base[sc.base.length-1],py=Object.keys(sc.pf).length;
+  /* 把目前方案 S() 的各個分頁寫入活頁簿；pfx：多方案匯出時的分頁名稱前綴（例如「2. 」） */
+  function xScheme(wb,pfx){
+    const sc=S(),MB=ms('base'),MW=ms('wd'),cu=sc.cur||'',today=new Date().toLocaleDateString('zh-HK'),sub=(sc.name||'')+(cu?'｜貨幣：'+cu:'')+'｜製表日期：'+today;
+    const lastB=sc.base[sc.base.length-1],pv=Object.values(sc.pf),py=pv.length;
+    /* 繳費方式：整付，或「每年保費 × 年期」 */
+    const pay=py<=1?'整付':(pv.every(v=>Math.abs(v-pv[0])<1)?'':'平均 ')+fmt(lastB.prem/py)+' × '+py+' 年';
     const A3=[['保單年度','c','A'],['年齡','c','A'],['已繳保費','n','A']],RC=[['預期收益','n','C'],['回報倍數','x','C'],['單利','p','C'],['IRR 複利','p','C']];
     const cB=A3.concat([['保證金額','n','B'],['非保證金額','n','B'],['退保發還金額','n','B']],RC);
-    const cW=A3.concat([['當年提取','n','D'],['累計提取','n','D'],['提取後退保金額','n','B']],RC);
     const cBF=A3.concat([['保證金額','n','B'],['非保證金額','n','B'],['退保發還金額（總額）','n','B'],['身故賠償額','n','B']],RC);
-    const cWF=A3.concat([['當年提取','n','D'],['累計提取','n','D'],['保證金額','n','B'],['非保證金額','n','B'],['提取後退保金額（總額）','n','B'],['提取後身故賠償額','n','B']],RC);
-    /* 摘要：不提取與提取各自使用自己的重點年度 */
-    let ws=wb.addWorksheet('摘要',{views:[{showGridLines:false}]});xInit(ws,'計劃書回報分析',sub,10,15,X.navy);
-    let r=xCards(ws,4,[['保單貨幣',cu||'—'],['投保年齡',(sc.base[0].age-sc.base[0].y)+' 歲'],['繳費年期',py===1?'整付':py+' 年'],['已繳總保費',lastB.prem],['提取方案合共提取',sc.wd?sc.wd[sc.wd.length-1].cumW:'—']],2);
+    const cWF=A3.concat([['當年提取','n','D'],['累計提取','n','D'],['用途','c','D'],['保證金額','n','B'],['非保證金額','n','B'],['提取後退保金額（總額）','n','B'],['提取後身故賠償額','n','B']],RC);
+    /* 摘要「提取」部分：按建議書的提取時段，一個時段一行；數字為該時段最後一次提取的保單年度終 */
+    const cS=[['保單年度','c','A'],['年齡','c','A'],['每年提取','n','D'],['提取年數','c','D'],['合共提取','n','D'],['累計提取','n','D'],['提取後退保金額','n','B'],['預期收益','n','C'],['回報倍數','x','C'],['IRR 複利','p','C']];
+    /* 摘要 */
+    let ws=wb.addWorksheet(pfx+'摘要',{views:[{showGridLines:false}]});xInit(ws,'理財計劃建議書',sub,10,15,X.navy);
+    let r=xCards(ws,4,[['保單貨幣',cu||'—'],['投保年齡',(sc.base[0].age-sc.base[0].y)+' 歲'],['繳費方式',pay],['已繳總保費',lastB.prem],['提取方案合共提取',sc.wd?sc.wd[sc.wd.length-1].cumW:'—']],2);
     r=xTable(ws,r,cB,sc.base.filter(x=>MB.includes(x.y)).map(x=>['第 '+x.y+' 年',x.age+' 歲',x.prem,x.gcv,x.ng,x.sv,x.total,x.mult,x.simple,x.irr]),{title:'不提取｜重點年度回報（第 '+MB.join('、')+' 年）',grp:true}).next;
-    if(sc.wd)r=xTable(ws,r,cW,sc.wd.filter(x=>MW.includes(x.y)).map(x=>['第 '+x.y+' 年',x.age+' 歲',x.prem,x.w,x.cumW,x.sv,x.total,x.mult,x.simple,x.irr]),{title:'提取｜重點年度回報（第 '+MW.join('、')+' 年）',grp:true}).next;
-    xNote(ws,r,10,DISC);
+    if(sc.wd){
+      const sd=sc.segs.map(s=>{const st=sstat(sc,s);if(!st.n)return null;const x=sc.wd.find(q=>q.y===st.by);
+        return[yLab(s),aLab(st),Math.round(st.avg),st.n+' 年',st.t,x.cumW,x.sv,x.total,x.mult,x.irr];}).filter(Boolean);
+      r=xTable(ws,r,cS,sd,{title:'提取｜建議書提取時段',grp:true}).next;
+      r=xBar(ws,r,10,foot(sc));
+      xNote(ws,r,10,'提取部分每行為一個提取時段；「累計提取」「提取後退保金額」及回報數字為該時段最後一次提取的保單年度終結時的數字，「每年提取」如各年金額不同則為平均數。'+DISC);
+    }else xNote(ws,r,10,DISC);
     /* 不提取逐年 */
-    ws=wb.addWorksheet('不提取逐年');xInit(ws,'不提取｜逐年明細',sub,11,15,X.teal);
+    ws=wb.addWorksheet(pfx+'不提取逐年');xInit(ws,'不提取｜逐年明細',sub,11,15,X.teal);
     let t=xTable(ws,4,cBF,sc.base.map(x=>[x.y,x.age,x.prem,x.gcv,x.ng,x.sv,x.db,x.total,x.mult,x.simple,x.irr]),{grp:true,key:d=>MB.includes(d[0])});
     ws.views=[{state:'frozen',xSplit:2,ySplit:t.hr,showGridLines:false}];ws.pageSetup.printTitlesRow=(t.hr-1)+':'+t.hr;xNote(ws,t.next,11,'金色底為「不提取」的重點年度。'+DISC);
-    /* 提取 */
+    /* 提取逐年（上半部為提取用途規劃，下半部為逐年明細） */
     if(sc.wd){
-      ws=wb.addWorksheet('提取逐年');xInit(ws,'提取｜逐年明細',sub,13,15,X.blue);
-      t=xTable(ws,4,cWF,sc.wd.map(x=>[x.y,x.age,x.prem,x.w,x.cumW,x.gcv,x.ng,x.sv,x.db,x.total,x.mult,x.simple,x.irr]),{grp:true,key:d=>MW.includes(d[0])});
-      ws.views=[{state:'frozen',xSplit:2,ySplit:t.hr,showGridLines:false}];ws.pageSetup.printTitlesRow=(t.hr-1)+':'+t.hr;xNote(ws,t.next,13,'金色底為「提取」的重點年度。'+DISC);
-      ws=wb.addWorksheet('提取用途規劃摘要',{views:[{showGridLines:false}]});xInit(ws,'提取用途規劃摘要',sub,8,16,X.gold);
-      ws.getColumn(1).width=22;ws.getColumn(7).width=20;ws.getColumn(8).width=30;
-      r=xTable(ws,4,[['用途','t'],['年齡','c'],['保單年度','c'],['每年提取','n'],['提取年數','c'],['合共提取','n'],['提取後帳戶金額\n（時段最後年度終）','n'],['備註','t']],
-        sc.segs.map(s=>{const st=sstat(sc,s);return[(USES[s.use]||'')+' '+s.use,aLab(st),yLab(s),Math.round(st.avg),st.n+' 年',st.t,st.bal,s.note||''];}),{bold:[0,5,6]}).next;
-      r=xBar(ws,r,8,foot(sc));xNote(ws,r,8,'「提取後帳戶金額」為該時段最後一次提取的保單年度終結時之提取後退保金額。'+DISC);
+      const NC=14;
+      ws=wb.addWorksheet(pfx+'提取逐年');xInit(ws,'提取｜用途規劃及逐年明細',sub,NC,15,X.blue);
+      ws.getColumn(1).width=16;
+      t=xTable(ws,4,[['用途','t'],['年齡','c'],['保單年度','c'],['每年提取','n'],['提取年數','c'],['合共提取','n'],['提取後帳戶金額\n（時段最後年度終）','n'],['備註','t']],
+        sc.segs.map(s=>{const st=sstat(sc,s);return[(USES[s.use]||'')+' '+s.use,aLab(st),yLab(s),Math.round(st.avg),st.n+' 年',st.t,st.bal,s.note||''];}),{title:'提取用途規劃',bold:[0,5,6]});
+      for(let k=0;k<=sc.segs.length;k++)ws.mergeCells(t.hr+k,8,t.hr+k,NC); /* 備註欄橫跨餘下各欄 */
+      r=xBar(ws,t.next,NC,foot(sc));
+      const useAt=x=>{if(!(x.w>0))return'';const s=sc.segs.find(q=>x.y>=q.y1&&x.y<=q.y2);return s?(USES[s.use]||'')+' '+s.use:'';};
+      t=xTable(ws,r,cWF,sc.wd.map(x=>[x.y,x.age,x.prem,x.w,x.cumW,useAt(x),x.gcv,x.ng,x.sv,x.db,x.total,x.mult,x.simple,x.irr]),{title:'逐年明細',grp:true,key:d=>MW.includes(d[0])});
+      ws.views=[{state:'frozen',xSplit:2,ySplit:0,showGridLines:false}];ws.pageSetup.printTitlesRow=(t.hr-1)+':'+t.hr;
+      xNote(ws,t.next,NC,'金色底為「提取」的重點年度。「提取後帳戶金額」為該時段最後一次提取的保單年度終結時之提取後退保金額。'+DISC);
     }
+    /* 情景（只在已開啟 ⑦ 時匯出） */
+    if(showSc){
+      const d=scnData();
+      if(d.rows.length){
+        ws=wb.addWorksheet(pfx+'悲觀樂觀情景',{views:[{showGridLines:false}]});xInit(ws,'悲觀／樂觀情景｜'+(isWd()?'提取':'不提取'),sub,11,16,X.rose);
+        const f=['c','c','n','n','p','n','n','p','n','n','p'],hc=[null,null,X.rose,X.rose,X.rose,X.navy,X.navy,X.navy,X.teal,X.teal,X.teal];
+        const z=x=>x?[x.sv,x.total,x.irr]:[null,null,null];
+        r=xTable(ws,4,SCH.map((h,i)=>[h.replace('｜','\n'),f[i]]),d.rows.map(q=>['第 '+q.r.y+' 年',q.r.age+' 歲'].concat(z(q.p),z(q.r),z(q.o))),{hc,hh:40,bold:[0]}).next;
+        xNote(ws,r,11,scnNote(d)+DISC);
+      }
+    }
+  }
+  /* list：要匯出的方案編號（schemes 的索引）；多於一個時放在同一個檔案，分頁名稱加上方案編號 */
+  async function xlsx(list){
+    const wb=new ExcelJS.Workbook(),multi=list.length>1,keep=ai,today=new Date().toLocaleDateString('zh-HK');
+    try{list.forEach(i=>{ai=i;xScheme(wb,multi?(i+1)+'. ':'');});}finally{ai=keep;}
     /* 方案對比：每個時間點一張表 */
     const V=variants(),P=cpPts(),A2=byAge(),K=cpMets();
     if(V.length>=2&&P.length&&K.length){
       const nc=K.length+2;
-      ws=wb.addWorksheet('方案對比',{views:[{showGridLines:false}]});
+      const ws=wb.addWorksheet('方案對比',{views:[{showGridLines:false}]});
       xInit(ws,'方案對比',(A2?'同一年齡':'同一保單年度')+(cpRgLab()?'（'+cpRgLab()+'）':'')+'對比各方案｜製表日期：'+today,nc,16,'FF7C3AED');
       ws.getColumn(1).width=42;ws.getColumn(2).width=12;
       const mc=[['方案','t'],[A2?'保單年度':'年齡','c']].concat(K.map(m=>[m.n,m.x]));
-      r=4;
+      let r=4;
       P.forEach(p=>{
         const rs=V.map(v=>cpRow(v,p));if(rs.every(x=>!x))return;
         const bc=[null,null].concat(K.map(m=>{const ok=rs.map(x=>val(x,m.k)).filter(x=>x!=null);return ok.length>1&&!m.nb?Math.max(...ok):null;}));
@@ -866,20 +904,10 @@
       });
       xNote(ws,r,nc,'★ 及金色底為該欄最高值。'+DISC);
     }
-    /* 情景（只在已開啟 ⑦ 時匯出） */
-    if(showSc){
-      const d=scnData();
-      if(d.rows.length){
-        ws=wb.addWorksheet('悲觀樂觀情景',{views:[{showGridLines:false}]});xInit(ws,'悲觀／樂觀情景｜'+(isWd()?'提取':'不提取'),sub,11,16,X.rose);
-        const f=['c','c','n','n','p','n','n','p','n','n','p'],hc=[null,null,X.rose,X.rose,X.rose,X.navy,X.navy,X.navy,X.teal,X.teal,X.teal];
-        const z=x=>x?[x.sv,x.total,x.irr]:[null,null,null];
-        r=xTable(ws,4,SCH.map((h,i)=>[h.replace('｜','\n'),f[i]]),d.rows.map(q=>['第 '+q.r.y+' 年',q.r.age+' 歲'].concat(z(q.p),z(q.r),z(q.o))),{hc,hh:40,bold:[0]}).next;
-        xNote(ws,r,11,scnNote(d)+DISC);
-      }
-    }
+    const fn=(multi?'方案合集（'+list.length+' 個方案）':(schemes[list[0]].name||'計劃書')).replace(/[\\/:*?"<>|]/g,'_');
     const buf=await wb.xlsx.writeBuffer(),a=document.createElement('a');
     a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
-    a.download=(sc.name||'計劃書')+'_回報分析.xlsx';document.body.appendChild(a);a.click();a.remove();
+    a.download=fn+'_回報分析.xlsx';document.body.appendChild(a);a.click();a.remove();
   }
 
   /* ---------- 事件 ---------- */
@@ -891,8 +919,8 @@
   /* 方案切換：第 1 部分的方案列，以及置頂的方案切換列，兩者同步 */
   const pickS=e=>{const b=e.target.closest('button[data-s]');if(b){ai=+b.dataset.s;render();}};
   $('sch').addEventListener('click',pickS);$('sch2').addEventListener('click',pickS);
-  $('schDel').onclick=()=>{if(confirm('移除此方案？')){schemes.splice(ai,1);ai=0;render();if(!schemes.length){$('status').className='status';$('status').textContent='尚未上傳檔案。';}}};
-  $('name').addEventListener('change',e=>{S().name=e.target.value;render();});
+  $('schDel').onclick=()=>{if(confirm('移除此方案？')){schemes.splice(ai,1);ai=0;$('xlBox').classList.add('hide');render();if(!schemes.length){$('status').className='status';$('status').textContent='尚未上傳檔案。';}}};
+  $('name').addEventListener('change',e=>{S().name=e.target.value;$('xlBox').classList.add('hide');render();});
   $('mBase').onclick=()=>{mode='base';render();};
   $('mWd').onclick=()=>{if(S().wd){mode='wd';render();}};
   $('sl').addEventListener('input',e=>{sel=rows()[+e.target.value].y;render();});
@@ -937,7 +965,22 @@
   $('mpG').onchange=drawMap;
   $('mpTb').addEventListener('change',e=>{const c=e.target.dataset.c;if(c!==undefined)pend.G[+$('mpG').value].map[+c]=e.target.value;});
   $('mpOk').onclick=applyMap;
-  $('xl').onclick=()=>xlsx().catch(e=>alert('匯出失敗：'+e.message));
+  /* 匯出 Excel：只有一個方案時直接匯出；多個方案時先選擇要匯出哪些 */
+  const doXl=l=>xlsx(l).catch(e=>alert('匯出失敗：'+e.message));
+  $('xl').onclick=()=>{
+    if(schemes.length<2){doXl([ai]);return;}
+    const b=$('xlBox');
+    if(!b.classList.contains('hide')){b.classList.add('hide');return;}
+    $('xlList').innerHTML=schemes.map((s,i)=>`<label class="ck"><input type="checkbox" value="${i}"${i===ai?' checked':''}> ${i+1}. ${esc(s.name||'方案')}${s.wd?'':'（只有不提取）'}</label>`).join('');
+    b.classList.remove('hide');
+  };
+  $('xlAll').onclick=()=>$('xlList').querySelectorAll('input').forEach(c=>c.checked=true);
+  $('xlX').onclick=()=>$('xlBox').classList.add('hide');
+  $('xlGo').onclick=()=>{
+    const l=[...$('xlList').querySelectorAll('input:checked')].map(c=>+c.value).filter(i=>i<schemes.length);
+    if(!l.length){alert('請最少選擇一個方案。');return;}
+    $('xlBox').classList.add('hide');doXl(l);
+  };
   renderScn();
   </script>
   </body>
