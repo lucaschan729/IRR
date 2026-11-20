@@ -166,7 +166,7 @@
     <div class="row msr" id="msRW"><span class="tag w">提取</span><span>重點保單年度</span><input type="text" id="msW" value="5,10,15,20,25,30,40,50,60,70,80,90,100"></div>
     <div class="row" style="margin:10px 0"><button class="btn pri" id="mtCopy">複製重點年度</button></div>
     <div class="tw"><table id="mt"><thead></thead><tbody></tbody></table></div>
-    <div class="note">以逗號分隔。下表顯示上方所選模式（不提取／提取）的重點年度；點擊表格任何一行可選擇該年度。匯出 Excel 時，摘要的「不提取」部分使用重點年度，「提取」部分則按建議書的提取時段顯示。</div>
+    <div class="note">以逗號分隔。下表顯示上方所選模式（不提取／提取）的重點年度；點擊表格任何一行可選擇該年度。匯出 Excel 時，摘要的「不提取」部分使用重點年度，「提取」部分則按建議書的提取時段顯示（同樣附回報分析）。</div>
   </section>
 
   <section id="planSec" class="hide">
@@ -780,6 +780,8 @@
   /* ---------- Excel ---------- */
   const X={navy:'FF0F172A',gold:'FFB45309',teal:'FF0F766E',blue:'FF1D4ED8',soft:'FFFFFBEB',key:'FFFEF3C7',zeb:'FFF8FAFC',ln:'FFD5DCE6',wh:'FFFFFFFF',mut:'FF64748B',rose:'FF9F1239'};
   const GR={A:{n:'基本資料',d:X.navy,l:'FFE2E8F0'},D:{n:'提取安排',d:X.blue,l:'FFDBEAFE'},B:{n:'保單價值',d:X.teal,l:'FFCCFBF1'},C:{n:'回報分析',d:X.gold,l:'FFFEF3C7'}};
+  /* 摘要提取表：每個提取時段的底色 */
+  const BAND=['FFFDE68A','FFBAE6FD','FFE9D5FF','FFBBF7D0','FFFECDD3','FFFED7AA'];
   const FN='Arial';
   const fill=c=>({type:'pattern',pattern:'solid',fgColor:{argb:c}});
   const bd={style:'thin',color:{argb:X.ln}},BD={top:bd,left:bd,bottom:bd,right:bd};
@@ -831,6 +833,50 @@
   }
   function xBar(ws,r,ncol,t){ws.mergeCells(r,1,r,ncol);const c=ws.getCell(r,1);c.value=t;c.font={name:FN,bold:true,size:12,color:{argb:X.navy}};c.fill=fill(X.key);c.alignment={vertical:'middle',indent:1,wrapText:true};ws.getRow(r).height=32;return r+2;}
   function xNote(ws,r,ncol,t){ws.mergeCells(r,1,r,ncol);const c=ws.getCell(r,1);c.value=t;c.font={name:FN,size:9,italic:true,color:{argb:X.mut}};c.alignment={wrapText:true,vertical:'top'};ws.getRow(r).height=30;}
+  /* 摘要的提取表（10 欄，與「不提取」表對齊）：基本資料｜提取安排｜保單價值｜回報分析。
+     先列出繳費年度，之後每個提取時段一個色塊，「提取金額」合併成一格；每一行均附該年度的預期收益、回報倍數、單利及 IRR。
+     時段不多於 8 年逐年列出，較長的時段每 5 年（超過 25 年則每 10 年）列一行，並包括最後一年 */
+  function xWdSum(ws,r,sc,py){
+    const cu=sc.cur||'';
+    const H=[['保單年度','A'],['年齡','A'],[py<=1?'整付保費':'年繳保費','A'],['提取金額','D'],['累計提取金額','D'],['提取後退保金額','B'],['預期收益','C'],['回報倍數','C'],['單利','C'],['IRR 複利','C']];
+    const amt=v=>((v>=10000&&v%1000===0?(v/10000)+' 萬':fmt(v)+' ')+cu).trim();
+    const cell=(row,col,v,t,st,r2)=>{if(r2&&r2>row)ws.mergeCells(row,col,r2,col);
+      const c=ws.getCell(row,col);xCell(c,v,t,st);c.alignment={horizontal:'center',vertical:'middle',wrapText:true};return c;};
+    ws.getColumn(4).width=22; /* 「提取金額」欄要放「每年提取 × 年數」的文字 */
+    ws.mergeCells(r,1,r,10);let c=ws.getCell(r,1);c.value='提取｜建議書提取安排及回報分析';c.font={name:FN,bold:true,size:13,color:{argb:X.navy}};c.alignment={vertical:'middle'};c.border={bottom:{style:'medium',color:{argb:X.gold}}};ws.getRow(r).height=28;r++;
+    /* 分組標題行 */
+    for(let i=0;i<H.length;){
+      let j=i;while(j+1<H.length&&H[j+1][1]===H[i][1])j++;
+      if(j>i)ws.mergeCells(r,i+1,r,j+1);
+      const g=GR[H[i][1]];c=ws.getCell(r,i+1);c.value=g.n;c.font={name:FN,bold:true,size:11,color:{argb:X.wh}};c.fill=fill(g.d);c.alignment={horizontal:'center',vertical:'middle'};c.border=WB;
+      i=j+1;
+    }
+    ws.getRow(r).height=22;r++;
+    /* 欄位標題行 */
+    H.forEach((q,i)=>{c=ws.getCell(r,i+1);
+      c.value=q[0];c.fill=fill(GR[q[1]].l);c.font={name:FN,bold:true,size:10,color:{argb:X.navy}};c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.border=BD;});
+    ws.getRow(r).height=30;r++;
+    const line=(x,f,inSeg)=>{const st={fill:f,bold:!!f},rt={fill:f,bold:true,color:X.gold};
+      cell(r,1,x.y,'c',st);cell(r,2,x.age,'c',st);cell(r,3,sc.pf[x.y]||null,'n',st);
+      if(!inSeg)cell(r,4,null,'n',st);
+      cell(r,5,x.cumW>0?x.cumW:null,'n',st);cell(r,6,x.sv,'n',st);
+      /* 回報分析 */
+      cell(r,7,x.total,'n',rt);cell(r,8,x.mult,'x',rt);cell(r,9,x.simple,'p',rt);cell(r,10,x.irr,'p',rt);
+      ws.getRow(r).height=24;r++;};
+    /* 繳費年度（沒有提取的年度） */
+    sc.wd.filter(x=>sc.pf[x.y]&&!(x.w>0)).forEach(x=>line(x,null,false));
+    /* 提取時段 */
+    let bi=0;
+    sc.segs.forEach(s=>{
+      const rs=sc.wd.filter(x=>x.y>=s.y1&&x.y<=s.y2&&x.w>0),n=rs.length;if(!n)return;
+      const st=sstat(sc,s),step=n<=8?1:n<=25?5:10,y0=rs[0].y,pk=rs.filter((x,k)=>k===n-1||(x.y-y0)%step===0);
+      const f=BAND[bi++%BAND.length],r0=r;
+      pk.forEach(x=>line(x,f,true));
+      const txt=n===1?'提取 '+amt(st.t):(st.uni?'每年提取':'每年平均提取')+'\n'+amt(Math.round(st.avg))+' × '+n+' 年';
+      cell(r0,4,txt,'c',{fill:f,bold:true},r-1);
+    });
+    return r+1;
+  }
   /* 把目前方案 S() 的各個分頁寫入活頁簿；pfx：多方案匯出時的分頁名稱前綴（例如「2. 」） */
   function xScheme(wb,pfx){
     const sc=S(),MB=ms('base'),MW=ms('wd'),cu=sc.cur||'',today=new Date().toLocaleDateString('zh-HK'),sub=(sc.name||'')+(cu?'｜貨幣：'+cu:'')+'｜製表日期：'+today;
@@ -841,34 +887,40 @@
     const cB=A3.concat([['保證金額','n','B'],['非保證金額','n','B'],['退保發還金額','n','B']],RC);
     const cBF=A3.concat([['保證金額','n','B'],['非保證金額','n','B'],['退保發還金額（總額）','n','B'],['身故賠償額','n','B']],RC);
     const cWF=A3.concat([['當年提取','n','D'],['累計提取','n','D'],['用途','c','D'],['保證金額','n','B'],['非保證金額','n','B'],['提取後退保金額（總額）','n','B'],['提取後身故賠償額','n','B']],RC);
-    /* 摘要「提取」部分：按建議書的提取時段，一個時段一行；數字為該時段最後一次提取的保單年度終 */
-    const cS=[['保單年度','c','A'],['年齡','c','A'],['每年提取','n','D'],['提取年數','c','D'],['合共提取','n','D'],['累計提取','n','D'],['提取後退保金額','n','B'],['預期收益','n','C'],['回報倍數','x','C'],['IRR 複利','p','C']];
     /* 摘要 */
     let ws=wb.addWorksheet(pfx+'摘要',{views:[{showGridLines:false}]});xInit(ws,'理財計劃建議書',sub,10,15,X.navy);
     let r=xCards(ws,4,[['保單貨幣',cu||'—'],['投保年齡',(sc.base[0].age-sc.base[0].y)+' 歲'],['繳費方式',pay],['已繳總保費',lastB.prem],['提取方案合共提取',sc.wd?sc.wd[sc.wd.length-1].cumW:'—']],2);
     r=xTable(ws,r,cB,sc.base.filter(x=>MB.includes(x.y)).map(x=>['第 '+x.y+' 年',x.age+' 歲',x.prem,x.gcv,x.ng,x.sv,x.total,x.mult,x.simple,x.irr]),{title:'不提取｜重點年度回報（第 '+MB.join('、')+' 年）',grp:true}).next;
     if(sc.wd){
-      const sd=sc.segs.map(s=>{const st=sstat(sc,s);if(!st.n)return null;const x=sc.wd.find(q=>q.y===st.by);
-        return[yLab(s),aLab(st),Math.round(st.avg),st.n+' 年',st.t,x.cumW,x.sv,x.total,x.mult,x.irr];}).filter(Boolean);
-      r=xTable(ws,r,cS,sd,{title:'提取｜建議書提取時段',grp:true}).next;
+      r=xWdSum(ws,r,sc,py);
       r=xBar(ws,r,10,foot(sc));
-      xNote(ws,r,10,'提取部分每行為一個提取時段；「累計提取」「提取後退保金額」及回報數字為該時段最後一次提取的保單年度終結時的數字，「每年提取」如各年金額不同則為平均數。'+DISC);
+      xNote(ws,r,10,'提取部分按提取時段分色顯示，每行附該年度的回報分析（預期收益＝提取後退保金額＋累計提取－已繳保費）；較長的時段只列出部分年度（每 5 或 10 年及最後一年），完整每年數字見「提取每年情況」分頁。'+DISC);
     }else xNote(ws,r,10,DISC);
-    /* 不提取逐年 */
-    ws=wb.addWorksheet(pfx+'不提取逐年');xInit(ws,'不提取｜逐年明細',sub,11,15,X.teal);
+    /* 不提取每年情況 */
+    ws=wb.addWorksheet(pfx+'不提取每年情況');xInit(ws,'不提取｜每年情況',sub,11,15,X.teal);
     let t=xTable(ws,4,cBF,sc.base.map(x=>[x.y,x.age,x.prem,x.gcv,x.ng,x.sv,x.db,x.total,x.mult,x.simple,x.irr]),{grp:true,key:d=>MB.includes(d[0])});
     ws.views=[{state:'frozen',xSplit:2,ySplit:t.hr,showGridLines:false}];ws.pageSetup.printTitlesRow=(t.hr-1)+':'+t.hr;xNote(ws,t.next,11,'金色底為「不提取」的重點年度。'+DISC);
-    /* 提取逐年（上半部為提取用途規劃，下半部為逐年明細） */
+    /* 提取每年情況（上半部為提取用途規劃，下半部為每年情況） */
     if(sc.wd){
       const NC=14;
-      ws=wb.addWorksheet(pfx+'提取逐年');xInit(ws,'提取｜用途規劃及逐年明細',sub,NC,15,X.blue);
+      ws=wb.addWorksheet(pfx+'提取每年情況');xInit(ws,'提取｜用途規劃及每年情況',sub,NC,15,X.blue);
       ws.getColumn(1).width=16;
       t=xTable(ws,4,[['用途','t'],['年齡','c'],['保單年度','c'],['每年提取','n'],['提取年數','c'],['合共提取','n'],['提取後帳戶金額\n（時段最後年度終）','n'],['備註','t']],
         sc.segs.map(s=>{const st=sstat(sc,s);return[(USES[s.use]||'')+' '+s.use,aLab(st),yLab(s),Math.round(st.avg),st.n+' 年',st.t,st.bal,s.note||''];}),{title:'提取用途規劃',bold:[0,5,6]});
       for(let k=0;k<=sc.segs.length;k++)ws.mergeCells(t.hr+k,8,t.hr+k,NC); /* 備註欄橫跨餘下各欄 */
       r=xBar(ws,t.next,NC,foot(sc));
       const useAt=x=>{if(!(x.w>0))return'';const s=sc.segs.find(q=>x.y>=q.y1&&x.y<=q.y2);return s?(USES[s.use]||'')+' '+s.use:'';};
-      t=xTable(ws,r,cWF,sc.wd.map(x=>[x.y,x.age,x.prem,x.w,x.cumW,useAt(x),x.gcv,x.ng,x.sv,x.db,x.total,x.mult,x.simple,x.irr]),{title:'逐年明細',grp:true,key:d=>MW.includes(d[0])});
+      const U=sc.wd.map(useAt);
+      t=xTable(ws,r,cWF,sc.wd.map((x,k)=>[x.y,x.age,x.prem,x.w,x.cumW,U[k],x.gcv,x.ng,x.sv,x.db,x.total,x.mult,x.simple,x.irr]),{title:'每年情況',grp:true,key:d=>MW.includes(d[0])});
+      /* 「用途」欄：連續相同用途的年度合併成一格 */
+      for(let k=0;k<U.length;){
+        let j=k;while(j+1<U.length&&U[j+1]===U[k])j++;
+        if(U[k]){
+          if(j>k)ws.mergeCells(t.hr+1+k,6,t.hr+1+j,6);
+          const c=ws.getCell(t.hr+1+k,6);c.fill=fill(GR.D.l);c.font={name:FN,size:11,bold:true,color:{argb:X.navy}};c.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+        }
+        k=j+1;
+      }
       ws.views=[{state:'frozen',xSplit:2,ySplit:0,showGridLines:false}];ws.pageSetup.printTitlesRow=(t.hr-1)+':'+t.hr;
       xNote(ws,t.next,NC,'金色底為「提取」的重點年度。「提取後帳戶金額」為該時段最後一次提取的保單年度終結時之提取後退保金額。'+DISC);
     }
