@@ -17,9 +17,11 @@
   header p{margin:0;color:#cbd5e1;font-size:14px}
   main{max-width:1120px;margin:-48px auto 0;padding:0 14px 48px}
   section{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:18px;box-shadow:0 6px 20px rgba(15,23,42,.05)}
-  h2{margin:0 0 16px;font-size:18px;display:flex;align-items:center;gap:10px}
+  h2{margin:0 0 16px;font-size:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   h2 i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#fff;font-size:14px;font-weight:700;flex:none}
   h2 small{font-weight:400;color:var(--mut);font-size:12px}
+  h2 .sn{font-size:12px;font-weight:600;color:var(--gold);background:var(--soft);border:1px solid #fcd34d;border-radius:999px;padding:2px 10px}
+  h2 .sn:empty{display:none}
   .hide{display:none!important}
   .drop{display:block;border:2px dashed var(--gold2);background:var(--soft);border-radius:14px;padding:30px 20px;text-align:center;cursor:pointer;font-weight:600;transition:.15s}
   .drop:hover,.drop.over{background:#fef3c7;transform:translateY(-1px)}
@@ -31,6 +33,10 @@
   input:focus,select:focus{border-color:var(--gold2);box-shadow:0 0 0 3px rgba(245,158,11,.18)}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .modebar{position:sticky;top:8px;z-index:30;margin-bottom:18px}
+  .schbar{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:7px 10px;margin-bottom:6px;box-shadow:0 8px 24px rgba(15,23,42,.12)}
+  .schbar>span{font-size:13px;font-weight:700;color:var(--mut);flex:none}
+  .schbar .chips{margin:0;flex:1;flex-wrap:nowrap;overflow-x:auto}
+  .schbar .chips button{flex:none;white-space:nowrap}
   .tabs{display:flex;background:#fff;border:1px solid var(--line);border-radius:14px;padding:5px;box-shadow:0 8px 24px rgba(15,23,42,.12)}
   .tabs button{flex:1;border:0;background:transparent;padding:11px;border-radius:10px;font-size:15px;font-weight:700;color:var(--mut);cursor:pointer;font-family:inherit;transition:.15s}
   .tabs button.on{background:var(--navy);color:#fff}
@@ -43,6 +49,7 @@
   .chips button,.btn{border:1px solid var(--line2);background:#fff;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;color:var(--navy);font-family:inherit;transition:.15s}
   .chips button:hover,.btn:hover{border-color:var(--navy)}
   .chips button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  #sch2 button.on{background:var(--gold);border-color:var(--gold);font-weight:700}
   #cpv button{border-width:2px;font-weight:600}
   #cpk button.on{background:var(--gold);border-color:var(--gold)}
   .btn.pri{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:600}
@@ -132,9 +139,12 @@
   </section>
 
   <div id="app" class="hide">
-  <div class="modebar"><div class="tabs"><button id="mBase" class="on">不提取</button><button id="mWd">提取</button></div></div>
+  <div class="modebar">
+    <div class="schbar hide" id="schBar"><span>查看方案</span><div class="chips" id="sch2"></div></div>
+    <div class="tabs"><button id="mBase" class="on">不提取</button><button id="mWd">提取</button></div>
+  </div>
   <section>
-    <h2><i>2</i>保單價值概覽</h2>
+    <h2><i>2</i>保單價值概覽<span class="sn"></span></h2>
     <div class="sel"><b id="yr"></b><span id="ag"></span></div>
     <input type="range" id="sl" min="0" max="0" value="0">
     <div class="chips" id="chips"></div>
@@ -143,7 +153,7 @@
   </section>
 
   <section>
-    <h2><i>3</i>重點年度回報 <small>「不提取」與「提取」各自設定，互不影響</small></h2>
+    <h2><i>3</i>重點年度回報<span class="sn"></span> <small>「不提取」與「提取」各自設定，互不影響</small></h2>
     <div class="row msr" id="msRB"><span class="tag b">不提取</span><span>重點保單年度</span><input type="text" id="msB" value="5,10,15,20,25,30,40,50,60,70,80,90,100"></div>
     <div class="row msr" id="msRW"><span class="tag w">提取</span><span>重點保單年度</span><input type="text" id="msW" value="5,10,15,20,25,30,40,50,60,70,80,90,100"></div>
     <div class="row" style="margin:10px 0"><button class="btn pri" id="mtCopy">複製重點年度</button></div>
@@ -152,7 +162,7 @@
   </section>
 
   <section id="planSec" class="hide">
-    <h2><i>4</i>提取用途規劃摘要</h2>
+    <h2><i>4</i>提取用途規劃摘要<span class="sn"></span></h2>
     <div class="tw"><table id="pt"><thead><tr><th>年齡</th><th>保單年度</th><th>每年提取</th><th>提取年數</th><th>合共提取</th><th>提取後帳戶金額</th><th>用途</th><th>備註（可不填）</th><th></th></tr></thead><tbody></tbody></table></div>
     <div class="foot" id="pNote"></div>
     <div class="row" style="margin-top:12px"><button class="btn pri" id="pCopy">複製摘要</button><button class="btn" id="pAuto">重設時段</button></div>
@@ -160,7 +170,7 @@
   </section>
 
   <section>
-    <h2><i>5</i>逐年明細</h2>
+    <h2><i>5</i>逐年明細<span class="sn"></span></h2>
     <div class="row" style="margin-bottom:10px">
       <label class="ck"><input type="checkbox" id="sG" checked> 保證金額</label>
       <label class="ck"><input type="checkbox" id="sN" checked> 非保證金額</label>
@@ -189,7 +199,7 @@
 
   <div class="adv"><button id="scT"></button></div>
   <section id="scSec" class="hide">
-    <h2><i>7</i>悲觀／樂觀情景 <small>跟隨上方「不提取／提取」模式及其重點年度</small></h2>
+    <h2><i>7</i>悲觀／樂觀情景<span class="sn"></span> <small>跟隨上方「不提取／提取」模式及其重點年度</small></h2>
     <div class="row" style="margin-bottom:10px;font-size:13px">
       <span>數據來源</span><div class="seg" id="scS"><button data-v="pdf">建議書數字</button><button data-v="est">自行估算</button></div>
       <span class="row" id="scEst">悲觀：非保證金額 × <input type="number" id="scP" value="70" min="0" max="100" style="width:72px">%　樂觀：非保證金額 × <input type="number" id="scO" value="130" min="100" max="300" style="width:72px">%</span>
@@ -741,7 +751,13 @@
     if(!has)return;
     if(ai>=schemes.length)ai=schemes.length-1;
     const sc=S();if(!sc.wd)mode='base';
-    $('sch').innerHTML=schemes.map((s,i)=>`<button data-s="${i}" class="${i===ai?'on':''}">${i+1}. ${esc(s.name)}</button>`).join('');
+    const schBtns=schemes.map((s,i)=>`<button data-s="${i}" class="${i===ai?'on':''}">${i+1}. ${esc(s.name)}</button>`).join('');
+    $('sch').innerHTML=schBtns;
+    /* 置頂的方案切換列（多於一個方案時顯示）及各部分標題旁的方案名稱 */
+    const multi=schemes.length>1;
+    $('schBar').classList.toggle('hide',!multi);$('sch2').innerHTML=schBtns;
+    const on2=$('sch2').querySelector('button.on');if(on2&&on2.scrollIntoView)on2.scrollIntoView({block:'nearest',inline:'nearest'});
+    document.querySelectorAll('h2 .sn').forEach(e=>e.textContent=multi?(ai+1)+'. '+(sc.name||'方案'):'');
     if(document.activeElement!==$('name'))$('name').value=sc.name;
     const rs=rows();let i=rs.findIndex(r=>r.y>=sel);if(i<0)i=rs.length-1;sel=rs[i].y;
     $('mBase').classList.toggle('on',mode==='base');$('mWd').classList.toggle('on',mode==='wd');$('mWd').disabled=!sc.wd;
@@ -872,7 +888,9 @@
   ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('over');}));
   ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('over');}));
   dz.addEventListener('drop',e=>{const f=[...e.dataTransfer.files].filter(x=>/\.pdf$/i.test(x.name));if(f.length)handle(f);});
-  $('sch').addEventListener('click',e=>{const s=e.target.dataset.s;if(s!==undefined){ai=+s;render();}});
+  /* 方案切換：第 1 部分的方案列，以及置頂的方案切換列，兩者同步 */
+  const pickS=e=>{const b=e.target.closest('button[data-s]');if(b){ai=+b.dataset.s;render();}};
+  $('sch').addEventListener('click',pickS);$('sch2').addEventListener('click',pickS);
   $('schDel').onclick=()=>{if(confirm('移除此方案？')){schemes.splice(ai,1);ai=0;render();if(!schemes.length){$('status').className='status';$('status').textContent='尚未上傳檔案。';}}};
   $('name').addEventListener('change',e=>{S().name=e.target.value;render();});
   $('mBase').onclick=()=>{mode='base';render();};
