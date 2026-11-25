@@ -3,73 +3,85 @@
   <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0f172a">
   <title>計劃書回報分析</title>
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
   <style>
-  :root{--navy:#0f172a;--navy2:#1e293b;--gold:#b45309;--gold2:#f59e0b;--soft:#fffbeb;--line:#e2e8f0;--line2:#cbd5e1;--mut:#64748b;--bg:#f4f6fb;--red:#dc2626;--teal:#0f766e;--blue:#1d4ed8}
-  *{box-sizing:border-box}
+  :root{--navy:#0f172a;--navy2:#1e293b;--gold:#b45309;--gold2:#f59e0b;--soft:#fffbeb;--line:#e2e8f0;--line2:#cbd5e1;--mut:#64748b;--bg:#f1f4fa;--red:#dc2626;--teal:#0f766e;--blue:#1d4ed8}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{margin:0;font-family:-apple-system,"PingFang HK","Microsoft JhengHei","Noto Sans TC",sans-serif;background:var(--bg);color:var(--navy);-webkit-font-smoothing:antialiased;line-height:1.5}
-  header{background:radial-gradient(circle at 85% 0%,rgba(245,158,11,.28),transparent 45%),linear-gradient(135deg,#0f172a,#1e293b 60%,#273449);color:#fff;padding:40px 20px 76px}
-  .hd{max-width:1120px;margin:0 auto}
-  header h1{margin:0 0 8px;font-size:30px;letter-spacing:1px}
+  header{position:relative;overflow:hidden;background:radial-gradient(circle at 85% 0%,rgba(245,158,11,.3),transparent 45%),linear-gradient(135deg,#0b1222,#1e293b 60%,#2b3a52);color:#fff;padding:46px 20px 84px}
+  header::before{content:"";position:absolute;right:-80px;top:-90px;width:260px;height:260px;border-radius:50%;border:38px solid rgba(245,158,11,.14)}
+  header::after{content:"";position:absolute;left:-60px;bottom:-110px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.04)}
+  .hd{max-width:1120px;margin:0 auto;position:relative;z-index:1}
+  .eye{font-size:11px;letter-spacing:4px;color:#fcd34d;margin-bottom:8px}
+  header h1{margin:0 0 10px;font-size:32px;letter-spacing:2px}
   header h1 span{color:var(--gold2)}
-  header p{margin:0;color:#cbd5e1;font-size:14px}
-  main{max-width:1120px;margin:-48px auto 0;padding:0 14px 48px}
-  section{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:18px;box-shadow:0 6px 20px rgba(15,23,42,.05)}
+  header p{margin:0;color:#cbd5e1;font-size:14px;max-width:640px}
+  main{max-width:1120px;margin:-52px auto 0;padding:0 14px 48px;position:relative;z-index:1}
+  section{background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px;margin-bottom:18px;box-shadow:0 10px 30px rgba(15,23,42,.06)}
   h2{margin:0 0 16px;font-size:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  h2 i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#fff;font-size:14px;font-weight:700;flex:none}
+  h2 i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#fff;font-size:14px;font-weight:700;flex:none;box-shadow:0 4px 10px rgba(180,83,9,.3)}
   h2 small{font-weight:400;color:var(--mut);font-size:12px}
   h2 .sn{font-size:12px;font-weight:600;color:var(--gold);background:var(--soft);border:1px solid #fcd34d;border-radius:999px;padding:2px 10px}
   h2 .sn:empty{display:none}
   .hide{display:none!important}
-  .drop{display:block;border:2px dashed var(--gold2);background:var(--soft);border-radius:14px;padding:30px 20px;text-align:center;cursor:pointer;font-weight:600;transition:.15s}
-  .drop:hover,.drop.over{background:#fef3c7;transform:translateY(-1px)}
-  .drop small{display:block;font-weight:400;color:var(--mut);margin-top:4px}
+  .drop{display:block;border:2px dashed var(--gold2);background:linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:16px;padding:36px 20px;text-align:center;cursor:pointer;font-weight:700;font-size:16px;transition:.15s}
+  .drop:hover,.drop.over{background:#fde68a;transform:translateY(-2px);box-shadow:0 10px 24px rgba(245,158,11,.22)}
+  .drop small{display:block;font-weight:400;font-size:13px;color:var(--mut);margin-top:6px}
   .drop input{display:none}
   .status{margin-top:10px;font-size:13px;color:var(--mut);white-space:pre-line;line-height:1.7}
   .status.err{color:var(--red)}
-  input[type=text],input[type=number],select{border:1px solid var(--line2);border-radius:9px;padding:8px 10px;font-size:14px;font-family:inherit;background:#fff;color:var(--navy);outline:none;transition:.15s}
-  input:focus,select:focus{border-color:var(--gold2);box-shadow:0 0 0 3px rgba(245,158,11,.18)}
+  input[type=text],input[type=number],select{border:1.5px solid var(--line2);border-radius:10px;padding:8px 11px;font-size:14px;font-family:inherit;background:#fff;color:var(--navy);outline:none;transition:.15s}
+  input:focus,select:focus{border-color:var(--gold2);box-shadow:0 0 0 4px rgba(245,158,11,.18)}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .modebar{position:sticky;top:8px;z-index:30;margin-bottom:18px}
-  .schbar{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:7px 10px;margin-bottom:6px;box-shadow:0 8px 24px rgba(15,23,42,.12)}
+  .schbar{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:16px;padding:7px 10px;margin-bottom:6px;box-shadow:0 10px 28px rgba(15,23,42,.14)}
   .schbar>span{font-size:13px;font-weight:700;color:var(--mut);flex:none}
   .schbar .chips{margin:0;flex:1;flex-wrap:nowrap;overflow-x:auto}
   .schbar .chips button{flex:none;white-space:nowrap}
-  .tabs{display:flex;background:#fff;border:1px solid var(--line);border-radius:14px;padding:5px;box-shadow:0 8px 24px rgba(15,23,42,.12)}
-  .tabs button{flex:1;border:0;background:transparent;padding:11px;border-radius:10px;font-size:15px;font-weight:700;color:var(--mut);cursor:pointer;font-family:inherit;transition:.15s}
-  .tabs button.on{background:var(--navy);color:#fff}
+  .tabs{display:flex;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:16px;padding:5px;box-shadow:0 10px 28px rgba(15,23,42,.14)}
+  .tabs button{flex:1;border:0;background:transparent;padding:12px;border-radius:12px;font-size:15px;font-weight:700;color:var(--mut);cursor:pointer;font-family:inherit;transition:.15s}
+  .tabs button.on{background:linear-gradient(135deg,#0f172a,#334155);color:#fff;box-shadow:0 4px 12px rgba(15,23,42,.3),inset 0 -3px 0 var(--gold2)}
   .tabs button:disabled{opacity:.35;cursor:not-allowed}
   .sel{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
-  .sel b{font-size:28px}
-  .sel span{font-size:18px;color:var(--gold);font-weight:700}
+  .sel b{font-size:30px;letter-spacing:.5px}
+  .sel span{font-size:18px;color:var(--gold);font-weight:700;background:var(--soft);border-radius:999px;padding:1px 12px}
   input[type=range]{width:100%;accent-color:var(--gold2);margin:8px 0}
   .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
-  .chips button,.btn{border:1px solid var(--line2);background:#fff;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;color:var(--navy);font-family:inherit;transition:.15s}
+  .chips button,.btn{border:1.5px solid var(--line2);background:#fff;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;color:var(--navy);font-family:inherit;transition:.15s}
   .chips button:hover,.btn:hover{border-color:var(--navy)}
+  .chips button:active,.btn:active{transform:scale(.97)}
+  .btn:disabled{opacity:.6;cursor:wait}
   .chips button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
   #sch2 button.on{background:var(--gold);border-color:var(--gold);font-weight:700}
   #cpv button{border-width:2px;font-weight:600}
   #cpk button.on{background:var(--gold);border-color:var(--gold)}
-  .btn.pri{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:600}
+  .btn.pri{background:linear-gradient(135deg,#0f172a,#334155);color:#fff;border-color:transparent;font-weight:600;box-shadow:0 4px 10px rgba(15,23,42,.2)}
   .btn.pri:hover{background:var(--navy2)}
-  .btn.gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#fff;border-color:transparent;font-weight:600}
+  .btn.gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#fff;border-color:transparent;font-weight:600;box-shadow:0 4px 10px rgba(180,83,9,.25)}
   .seg{display:inline-flex;background:var(--bg);border-radius:10px;padding:3px;border:1px solid var(--line)}
   .seg button{border:0;background:transparent;padding:7px 13px;border-radius:8px;font-size:13px;font-weight:600;color:var(--mut);cursor:pointer;font-family:inherit}
   .seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(15,23,42,.15)}
   .seg button:disabled{opacity:.4;cursor:not-allowed}
   .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
-  .tile{border:1px solid var(--line);border-radius:12px;padding:13px 14px;background:#fff}
+  .tile{border:1px solid var(--line);border-radius:14px;padding:14px 15px;background:#fff;transition:.15s}
+  .tile:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(15,23,42,.08)}
   .tile small{display:block;color:var(--mut);font-size:12px;margin-bottom:4px}
   .tile b{font-size:19px}
-  .tile.hi{background:linear-gradient(135deg,#fffbeb,#fef3c7);border-color:#fcd34d}
-  .tile.hi b{color:var(--gold)}
+  .tile.hi{background:linear-gradient(135deg,#0f172a,#334155);border-color:transparent;box-shadow:inset 0 3px 0 var(--gold2)}
+  .tile.hi small{color:#cbd5e1}
+  .tile.hi b{color:#fcd34d}
   .calc{background:var(--bg);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.9}
   .calc summary{cursor:pointer;font-weight:600;color:var(--mut)}
   .calc div{white-space:pre-line;margin-top:6px}
-  .tw{overflow-x:auto;border:1px solid var(--line2);border-radius:12px}
+  .tw{overflow-x:auto;border:1px solid var(--line2);border-radius:14px}
   .tw.tall{max-height:70vh;overflow:auto}
+  .tw::-webkit-scrollbar{height:8px;width:8px}
+  .tw::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px}
   table{border-collapse:collapse;width:100%;font-size:14px;white-space:nowrap}
   th,td{padding:9px 12px;text-align:right;border-bottom:1px solid var(--line);border-right:1px solid var(--line)}
   th:last-child,td:last-child{border-right:0}
@@ -94,7 +106,7 @@
   #mpTb select{font-size:12px;padding:5px 6px;max-width:150px}
   .cph{font-weight:700;font-size:16px;margin:20px 0 8px;color:var(--gold)}
   .note{font-size:12px;color:var(--mut);margin-top:10px;line-height:1.7}
-  .foot{margin-top:12px;font-size:14px;font-weight:600;background:var(--soft);border-radius:10px;padding:10px 14px}
+  .foot{margin-top:12px;font-size:14px;font-weight:600;background:var(--soft);border-left:4px solid var(--gold2);border-radius:10px;padding:10px 14px}
   label.ck{font-size:13px;display:inline-flex;align-items:center;gap:4px}
   .msr{padding:8px 10px;border-radius:12px;border:1px solid transparent;margin-bottom:6px;font-size:13px;opacity:.55}
   .msr.act{opacity:1;background:var(--soft);border-color:#fcd34d}
@@ -107,19 +119,65 @@
   .sl{font-size:14px;font-weight:700;margin-bottom:10px}
   .sl b{display:inline-block;background:var(--navy);color:#fff;border-radius:6px;padding:2px 8px;font-size:12px;margin-right:8px}
   .sl small{font-weight:400;color:var(--mut)}
-  .xlbox{margin-top:12px;border:1px solid #fcd34d;background:var(--soft);border-radius:12px;padding:14px 16px}
+  .xlbox{margin-top:12px;border:1px solid #fcd34d;background:var(--soft);border-radius:14px;padding:14px 16px}
   #xlList{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
   #xlList label{font-size:14px}
   .adv{text-align:center;margin:4px 0 18px}
   .adv button{border:1px dashed var(--line2);background:transparent;color:var(--mut);border-radius:999px;padding:8px 18px;font-size:13px;cursor:pointer;font-family:inherit}
   .adv button:hover{color:var(--navy);border-color:var(--navy)}
-  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:10px 22px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;box-shadow:0 8px 24px rgba(15,23,42,.3)}
+  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:10px 22px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;box-shadow:0 8px 24px rgba(15,23,42,.3);white-space:nowrap}
   #toast.on{opacity:1;transform:translateX(-50%)}
-  @media(max-width:600px){header h1{font-size:24px}section{padding:16px}th,td{padding:8px 9px;font-size:13px}}
+  @media(max-width:600px){header h1{font-size:25px}section{padding:16px}th,td{padding:8px 9px;font-size:13px}}
+
+  /* ===== PDF 範本（畫面外渲染；直向 794×1123px，橫向 1123×794px） ===== */
+  #pdfWrap{position:absolute;left:-10000px;top:0}
+  .pp{width:794px;height:1123px;background:#fff;color:#0f172a;display:flex;flex-direction:column;overflow:hidden;font-family:"PingFang HK","Microsoft JhengHei","Noto Sans TC","Heiti TC",sans-serif;line-height:1.4}
+  .pp.ls{width:1123px;height:794px}
+  .pp-head{height:104px;flex:none;background:#0f172a;color:#fff;padding:0 46px;display:flex;justify-content:space-between;align-items:center;gap:24px}
+  .pp-hl{flex:1;min-width:0}
+  .pp-eye{font-size:11px;letter-spacing:3px;color:#fcd34d}
+  .pp-title{font-size:24px;font-weight:700;letter-spacing:1px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pp-date{flex:none;text-align:right;border-left:3px solid #f59e0b;padding-left:14px}
+  .pp-date small{display:block;font-size:10.5px;color:#cbd5e1}
+  .pp-date b{display:block;font-size:17px}
+  .pp-gold{height:5px;flex:none;background:#f59e0b}
+  .pp-body{flex:1;padding:18px 46px 0;overflow:hidden}
+  .pp-foot{flex:none;height:54px;margin:0 46px;border-top:1px solid #cbd5e1;display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:9.5px;color:#64748b}
+  .pp-foot span:last-child{flex:none;font-weight:700;color:#0f172a}
+  .pp-cards{display:flex;gap:8px;height:80px;margin-bottom:6px}
+  .pp-cards div{flex:1;border:1px solid #e2e8f0;border-top:3px solid #0f172a;border-radius:8px;background:#f8fafc;display:flex;flex-direction:column;justify-content:center;text-align:center;padding:0 6px}
+  .pp-cards div.hi{background:#fffbeb;border-color:#fcd34d;border-top-color:#b45309}
+  .pp-cards small{font-size:10.5px;color:#64748b}
+  .pp-cards b{font-size:14.5px;line-height:1.25;margin-top:3px}
+  .pp-cards .hi b{color:#b45309}
+  .pp-sec{height:26px;line-height:26px;margin:14px 0 8px;font-size:14.5px;font-weight:700;border-left:5px solid #f59e0b;padding-left:10px}
+  .pp-bar{height:36px;line-height:36px;margin-top:10px;background:#fef3c7;border-radius:8px;padding:0 14px;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden}
+  .pp-note{margin-top:8px;font-size:10px;color:#64748b;line-height:1.5}
+  .pp-use{display:inline-block;padding:1px 10px;border-radius:99px;font-weight:700;font-size:11px}
+  .pp-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+  .pp table{width:100%;border-collapse:collapse;font-size:11.5px;white-space:nowrap}
+  .pp table.sm{font-size:10.5px}
+  .pp thead th{position:static;height:30px;padding:0 8px;background:#0f172a;color:#fff;font-size:10.5px;font-weight:700;text-align:center;border:1px solid #fff}
+  .pp thead tr.g th{height:24px;font-size:11px}
+  .pp thead th.ga{background:#0f172a}.pp thead th.gb{background:#0f766e}.pp thead th.gc{background:#b45309}.pp thead th.gd{background:#1d4ed8}.pp thead th.gp{background:#9f1239}
+  .pp thead th.la{background:#e2e8f0;color:#0f172a}.pp thead th.lb{background:#ccfbf1;color:#0f172a}.pp thead th.lc{background:#fef3c7;color:#0f172a}.pp thead th.ld{background:#dbeafe;color:#0f172a}.pp thead th.lp{background:#ffe4e6;color:#0f172a}
+  .pp tbody tr td{height:27px;padding:0 8px;text-align:right;font-weight:400;background:#fff;color:#0f172a;border:0;border-bottom:1px solid #e2e8f0}
+  .pp table.sm thead th,.pp table.sm tbody tr td{padding:0 5px}
+  .pp tbody tr.z td{background:#f8fafc}
+  .pp tbody tr td.k{text-align:center;font-weight:700}
+  .pp tbody tr td.c{text-align:center}
+  .pp tbody tr td.l{text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+  .pp.ls tbody tr td.l{max-width:330px;font-weight:700}
+  .pp tbody tr td.b{font-weight:700}
+  .pp tbody tr td.r{font-weight:700;color:#b45309}
+  .pp tbody tr td.tp{color:#9f1239}
+  .pp tbody tr td.tt{color:#0f766e}
+  .pp tbody tr td.top{background:#fef3c7;color:#b45309;font-weight:700}
+  .pp td small{font-size:9.5px;color:#64748b;font-weight:400}
   </style>
   </head>
   <body>
-  <header><div class="hd"><h1>計劃書<span>回報分析</span></h1><p>上傳建議書 PDF（繁體或簡體），自動讀取「不提取」及「提取」兩種情況，可上傳多份作方案對比。</p></div></header>
+  <header><div class="hd"><div class="eye">PROPOSAL RETURN ANALYSIS</div><h1>計劃書<span>回報分析</span></h1><p>上傳建議書 PDF（繁體或簡體），自動讀取「不提取」及「提取」兩種情況，可上傳多份作方案對比。</p></div></header>
   <main>
   <section>
     <h2><i>1</i>上傳建議書</h2>
@@ -128,9 +186,9 @@
     <div class="row" style="margin-top:8px"><button class="btn hide" id="mpOpen">🛠 讀取不到或數字不對？手動對應欄位</button></div>
     <div id="schBox" class="hide" style="margin-top:14px">
       <div class="chips" id="sch"></div>
-      <div class="row"><span style="font-size:13px">方案名稱</span><input type="text" id="name" style="flex:1;min-width:200px"><button class="btn" id="schDel">移除此方案</button><button class="btn gold" id="xl">⬇ 匯出 Excel</button></div>
+      <div class="row"><span style="font-size:13px">方案名稱</span><input type="text" id="name" style="flex:1;min-width:200px"><button class="btn" id="schDel">移除此方案</button><button class="btn pri" id="pdf">⬇ 匯出 PDF</button><button class="btn gold" id="xl">⬇ 匯出 Excel</button></div>
       <div id="xlBox" class="xlbox hide">
-        <div class="sl">匯出哪些方案？<small>（可多選；多於一個時會放在同一個 Excel 檔，每個方案各有自己的分頁）</small></div>
+        <div class="sl">匯出哪些方案？<small>（可多選；多於一個時會放在同一個檔案內）</small></div>
         <div id="xlList"></div>
         <div class="row"><button class="btn" id="xlAll">全選</button><button class="btn gold" id="xlGo">⬇ 匯出所選方案</button><button class="btn" id="xlX">取消</button></div>
       </div>
@@ -166,7 +224,7 @@
     <div class="row msr" id="msRW"><span class="tag w">提取</span><span>重點保單年度</span><input type="text" id="msW" value="5,10,15,20,25,30,40,50,60,70,80,90,100"></div>
     <div class="row" style="margin:10px 0"><button class="btn pri" id="mtCopy">複製重點年度</button></div>
     <div class="tw"><table id="mt"><thead></thead><tbody></tbody></table></div>
-    <div class="note">以逗號分隔。下表顯示上方所選模式（不提取／提取）的重點年度；點擊表格任何一行可選擇該年度。匯出 Excel 時，摘要的「不提取」部分使用重點年度，「提取」部分則先逐年列出首 10 個保單年度，其後按提取用途的時段顯示（同樣附回報分析）。</div>
+    <div class="note">以逗號分隔。下表顯示上方所選模式（不提取／提取）的重點年度；點擊表格任何一行可選擇該年度。匯出 Excel 時，摘要的「不提取」部分使用重點年度，「提取」部分則先逐年列出首 10 個保單年度，其後按提取用途的時段顯示（同樣附回報分析）。匯出 PDF 時，「不提取」及「提取」均使用各自的重點年度。</div>
   </section>
 
   <section id="planSec" class="hide">
@@ -220,6 +278,7 @@
 
   <section><details><summary style="cursor:pointer;font-size:13px;color:var(--mut)">解析診斷（讀取有問題時請截圖這部分）</summary><div class="status" id="diag">—</div></details></section>
   </main>
+  <div id="pdfWrap"></div>
   <div id="toast"></div>
 
   <script>
@@ -1004,6 +1063,119 @@
     a.download=fn+'_回報分析.xlsx';document.body.appendChild(a);a.click();a.remove();
   }
 
+  /* ---------- PDF 匯出 ---------- */
+  /* 做法：把每一頁排成 A4 尺寸的 HTML（畫面外），用 html2canvas 轉成高清圖片，再用 jsPDF 合成 PDF。
+     方案頁為直向；方案對比頁因欄數多，改用橫向。 */
+  const PBAND=['#fde68a','#bae6fd','#e9d5ff','#bbf7d0','#fecdd3','#fed7aa'];
+  const pc=(v,c)=>'<td class="'+(c||'')+'">'+v+'</td>';
+  const pr=(cs,c)=>'<tr class="'+(c||'')+'">'+cs.join('')+'</tr>';
+  /* 一張表（或跨頁後的其中一段）：b = {title, grp:[[名稱,顏色代號,跨欄數]], heads, hc, sm} */
+  const pTbl=(b,rs,part)=>'<div class="pp-sec">'+esc(b.title)+(part?'（續）':'')+'</div><table class="'+(b.sm?'sm':'')+'"><thead>'+
+    (b.grp?'<tr class="g">'+b.grp.map(g=>'<th class="g'+g[1]+'" colspan="'+g[2]+'">'+g[0]+'</th>').join('')+'</tr>':'')+
+    '<tr>'+b.heads.map((h,i)=>'<th class="'+(b.hc?b.hc[i]:'')+'">'+h+'</th>').join('')+'</tr></thead><tbody>'+rs.join('')+'</tbody></table>';
+  /* 自動分頁：B 為內容塊（{h, html} 或表格 {title, heads, rows…}），CAP 為每頁可用高度（px）；表格太長會自動跨頁 */
+  function pFlow(B,CAP){
+    const pages=[],RH=28;let cur=[],left=CAP;
+    const np=()=>{if(cur.length)pages.push(cur.join(''));cur=[];left=CAP;};
+    B.forEach(b=>{
+      if(!b.rows){if(b.h>left)np();cur.push(b.html);left-=b.h;return;}
+      const hd=50+(b.grp?25:0)+31;let k=0,part=0;
+      while(k<b.rows.length){
+        const fit=Math.floor((left-hd)/RH),rem=b.rows.length-k;
+        if(fit<Math.min(3,rem)&&cur.length){np();continue;}
+        const n=Math.max(1,Math.min(fit,rem));
+        cur.push(pTbl(b,b.rows.slice(k,k+n),part++));left-=hd+n*RH;k+=n;
+        if(k<b.rows.length)np();
+      }
+    });
+    np();return pages;
+  }
+  /* 目前方案 S() 的內容塊：概覽卡片 → 不提取重點年度 → 提取用途規劃 → 提取重點年度 →（已開啟 ⑦ 時）情景 */
+  function pScheme(){
+    const sc=S(),MB=ms('base'),MW=ms('wd'),g=sc.hasG,lastB=sc.base[sc.base.length-1],pv=Object.values(sc.pf),py=pv.length;
+    const pay=py<=1?'整付':(pv.every(v=>Math.abs(v-pv[0])<1)?'':'平均 ')+fmt(lastB.prem/py)+' × '+py+' 年';
+    const B=[];
+    B.push({h:92,html:'<div class="pp-cards">'+[['保單貨幣',sc.cur||'—'],['投保年齡',(sc.base[0].age-sc.base[0].y)+' 歲'],['繳費方式',pay],['已繳總保費',fmt(lastB.prem)],['提取方案合共提取',sc.wd?fmt(sc.wd[sc.wd.length-1].cumW):'—']]
+      .map((q,i)=>'<div class="'+(i>2?'hi':'')+'"><small>'+q[0]+'</small><b>'+esc(q[1])+'</b></div>').join('')+'</div>'});
+    B.push({title:'不提取｜重點年度回報',grp:[['基本資料','a',3],['保單價值','b',g?3:1],['回報分析','c',4]],
+      heads:['保單年度','年齡','已繳保費'].concat(g?['保證金額','非保證金額']:[],['退保發還金額','預期收益','回報倍數','單利','IRR 複利']),
+      hc:['la','la','la'].concat(g?['lb','lb']:[],['lb','lc','lc','lc','lc']),
+      rows:sc.base.filter(x=>MB.includes(x.y)).map((x,i)=>pr([pc('第 '+x.y+' 年','k'),pc(x.age+' 歲','c'),pc(fmt(x.prem))].concat(g?[pc(fmt(x.gcv)),pc(fmt(x.ng))]:[],
+        [pc(fmt(x.sv),'b'),pc(fmt(x.total),'r'),pc(mul(x.mult),'r'),pc(pct(x.simple),'r'),pc(pct(x.irr),'r')]),i%2?'z':''))});
+    if(sc.wd){
+      B.push({title:'提取｜用途規劃',heads:['用途','年齡','保單年度','每年提取','提取年數','合共提取','提取後帳戶金額'],
+        rows:sc.segs.map((s,i)=>{const st=sstat(sc,s);
+          return pr([pc('<span class="pp-use" style="background:'+PBAND[i%PBAND.length]+'">'+esc(s.use)+'</span>'+(s.note?' <small>'+esc(s.note)+'</small>':''),'l'),pc(aLab(st),'c'),pc(yLab(s),'c'),
+            pc((st.uni?'':'平均 ')+fmt(st.avg)),pc(st.n+' 年','c'),pc(fmt(st.t),'b'),pc(fmt(st.bal)+(st.by!=null?' <small>（第 '+st.by+' 年終）</small>':''),'b')],i%2?'z':'');})});
+      B.push({h:50,html:'<div class="pp-bar">'+esc(foot(sc))+'</div>'});
+      B.push({title:'提取｜重點年度回報',grp:[['基本資料','a',3],['提取安排','d',2],['保單價值','b',1],['回報分析','c',4]],
+        heads:['保單年度','年齡','已繳保費','當年提取','累計提取','提取後退保金額','預期收益','回報倍數','單利','IRR 複利'],
+        hc:['la','la','la','ld','ld','lb','lc','lc','lc','lc'],
+        rows:sc.wd.filter(x=>MW.includes(x.y)).map((x,i)=>pr([pc('第 '+x.y+' 年','k'),pc(x.age+' 歲','c'),pc(fmt(x.prem)),pc(x.w>0?fmt(x.w):'—'),pc(fmt(x.cumW)),
+          pc(fmt(x.sv),'b'),pc(fmt(x.total),'r'),pc(mul(x.mult),'r'),pc(pct(x.simple),'r'),pc(pct(x.irr),'r')],i%2?'z':''))});
+    }
+    if(showSc){
+      const d=scnData();
+      if(d.rows.length){
+        const c3=(x,c)=>x?[pc(fmt(x.sv),c),pc(fmt(x.total),c),pc(pct(x.irr),c)]:[pc('—','c'),pc('—','c'),pc('—','c')];
+        B.push({title:'悲觀／樂觀情景｜'+(isWd()?'提取':'不提取'),sm:true,grp:[['','a',2],['悲觀','p',3],['現時假設','a',3],['樂觀','b',3]],
+          heads:['保單年度','年齡','退保金額','預期收益','IRR','退保金額','預期收益','IRR','退保金額','預期收益','IRR'],
+          hc:['la','la','lp','lp','lp','la','la','la','lb','lb','lb'],
+          rows:d.rows.map((q,i)=>pr([pc('第 '+q.r.y+' 年','k'),pc(q.r.age+' 歲','c')].concat(c3(q.p,'tp'),c3(q.r,'b'),c3(q.o,'tt')),i%2?'z':''))});
+        B.push({h:50,html:'<div class="pp-note">'+esc(scnNote(d))+'</div>'});
+      }
+    }
+    return B;
+  }
+  const pPage=(p,n,N,date)=>'<div class="pp'+(p.ls?' ls':'')+'"><div class="pp-head"><div class="pp-hl"><div class="pp-eye">計劃書回報分析 · RETURN ANALYSIS</div><div class="pp-title">'+esc(p.title)+'</div></div>'+
+    '<div class="pp-date"><small>製表日期</small><b>'+date+'</b>'+(p.sub?'<small>'+esc(p.sub)+'</small>':'')+'</div></div><div class="pp-gold"></div>'+
+    '<div class="pp-body">'+p.body+'</div><div class="pp-foot"><span>＊'+DISC+'</span><span>第 '+n+' / '+N+' 頁</span></div></div>';
+  /* 手機（觸控裝置）開啟分享選單；電腦直接下載 */
+  async function deliver(blob,name,type){
+    try{
+      const f=new File([blob],name,{type});
+      if(window.matchMedia&&matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return;}
+    }catch(e){if(e&&e.name==='AbortError')return;}
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+    toast('✓ 已下載 PDF');
+  }
+  /* list：要匯出的方案編號；多於一個時放在同一個 PDF，每個方案由新一頁開始 */
+  async function pdfOut(list){
+    if(!window.html2canvas||!window.jspdf){toast('PDF 工具尚未載入，請檢查網絡後再試');return;}
+    const btn=$('pdf'),old=btn.textContent,wrap=$('pdfWrap'),keep=ai,multi=list.length>1,date=new Date().toLocaleDateString('zh-HK'),P=[];
+    try{list.forEach(i=>{ai=i;const sc=S();
+      pFlow(pScheme(),915).forEach(b=>P.push({title:(multi?(i+1)+'. ':'')+(sc.name||'方案'),sub:sc.cur?'貨幣：'+sc.cur:'',body:b}));});}finally{ai=keep;}
+    /* 方案對比（橫向）：每個時間點一張表 */
+    const V=variants(),PT=cpPts(),K=cpMets(),A2=byAge();
+    if(V.length>=2&&PT.length&&K.length){
+      const B=[];
+      PT.forEach(p=>{
+        const rs=V.map(v=>cpRow(v,p));if(rs.every(x=>!x))return;
+        const best={};K.forEach(m=>{const ok=rs.map(x=>val(x,m.k)).filter(x=>x!=null);best[m.k]=ok.length>1&&!m.nb?Math.max(...ok):null;});
+        B.push({title:cpLab(p),sm:K.length>8,heads:['方案',A2?'保單年度':'年齡'].concat(K.map(m=>m.n)),
+          rows:V.map((v,i)=>{const r=rs[i];
+            return pr([pc('<span class="pp-dot" style="background:'+v.c+'"></span>'+esc(v.l)+'｜'+v.t,'l'),pc(r?cpSub(r):'—','c')].concat(
+              K.map(m=>{const x=val(r,m.k),b=best[m.k]!=null&&x===best[m.k];return pc((b?'★ ':'')+(r?m.f(x):'—'),b?'top':'');})),i%2?'z':'');})});
+      });
+      pFlow(B,585).forEach(b=>P.push({ls:true,title:'方案對比',sub:(A2?'同一年齡':'同一保單年度')+(cpRgLab()?'・'+cpRgLab():'')+'｜★ 為該欄最高值',body:b}));
+    }
+    if(!P.length){toast('沒有可匯出的內容');return;}
+    btn.disabled=true;
+    try{
+      let pdf=null;
+      for(let k=0;k<P.length;k++){
+        btn.textContent='生成中 '+(k+1)+'/'+P.length+'…';
+        wrap.innerHTML=pPage(P[k],k+1,P.length,date);
+        const cv=await html2canvas(wrap.firstChild,{scale:2,backgroundColor:'#ffffff',windowWidth:1200});
+        const o=P[k].ls?'landscape':'portrait';
+        if(!pdf)pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4',orientation:o});else pdf.addPage('a4',o);
+        pdf.addImage(cv.toDataURL('image/jpeg',0.92),'JPEG',0,0,P[k].ls?297:210,P[k].ls?210:297);
+      }
+      const fn=(multi?'方案合集（'+list.length+' 個方案）':(schemes[list[0]].name||'計劃書')).replace(/[\\/:*?"<>|]/g,'_');
+      await deliver(pdf.output('blob'),fn+'_回報分析.pdf','application/pdf');
+    }finally{wrap.innerHTML='';btn.disabled=false;btn.textContent=old;}
+  }
+
   /* ---------- 事件 ---------- */
   $('file').addEventListener('change',e=>{const f=[...e.target.files];if(f.length)handle(f);e.target.value='';});
   const dz=$('drop');
@@ -1059,21 +1231,26 @@
   $('mpG').onchange=drawMap;
   $('mpTb').addEventListener('change',e=>{const c=e.target.dataset.c;if(c!==undefined)pend.G[+$('mpG').value].map[+c]=e.target.value;});
   $('mpOk').onclick=applyMap;
-  /* 匯出 Excel：只有一個方案時直接匯出；多個方案時先選擇要匯出哪些 */
+  /* 匯出 Excel／PDF：只有一個方案時直接匯出；多個方案時先選擇要匯出哪些（xpKind 記住今次是匯出哪一種） */
+  let xpKind='xl';
   const doXl=l=>xlsx(l).catch(e=>alert('匯出失敗：'+e.message));
-  $('xl').onclick=()=>{
-    if(schemes.length<2){doXl([ai]);return;}
+  const doPdf=l=>pdfOut(l).catch(e=>alert('匯出失敗：'+e.message));
+  const openExp=k=>{
+    if(schemes.length<2){(k==='pdf'?doPdf:doXl)([ai]);return;}
     const b=$('xlBox');
-    if(!b.classList.contains('hide')){b.classList.add('hide');return;}
+    if(!b.classList.contains('hide')&&xpKind===k){b.classList.add('hide');return;}
+    xpKind=k;$('xlGo').textContent='⬇ 匯出所選方案（'+(k==='pdf'?'PDF':'Excel')+'）';
     $('xlList').innerHTML=schemes.map((s,i)=>`<label class="ck"><input type="checkbox" value="${i}"${i===ai?' checked':''}> ${i+1}. ${esc(s.name||'方案')}${s.wd?'':'（只有不提取）'}</label>`).join('');
     b.classList.remove('hide');
   };
+  $('xl').onclick=()=>openExp('xl');
+  $('pdf').onclick=()=>openExp('pdf');
   $('xlAll').onclick=()=>$('xlList').querySelectorAll('input').forEach(c=>c.checked=true);
   $('xlX').onclick=()=>$('xlBox').classList.add('hide');
   $('xlGo').onclick=()=>{
     const l=[...$('xlList').querySelectorAll('input:checked')].map(c=>+c.value).filter(i=>i<schemes.length);
     if(!l.length){alert('請最少選擇一個方案。');return;}
-    $('xlBox').classList.add('hide');doXl(l);
+    $('xlBox').classList.add('hide');(xpKind==='pdf'?doPdf:doXl)(l);
   };
   renderScn();
   </script>
