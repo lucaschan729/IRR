@@ -1,3 +1,1395 @@
+  <!DOCTYPE html>
+  <html lang="zh-HK">
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0f172a">
+  <title>計劃書回報分析</title>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+  <style>
+  :root{--navy:#0f172a;--navy2:#1e293b;--gold:#b45309;--gold2:#f59e0b;--soft:#fffbeb;--line:#e2e8f0;--line2:#cbd5e1;--mut:#64748b;--bg:#f1f4fa;--red:#dc2626;--teal:#0f766e;--blue:#1d4ed8}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:-apple-system,"PingFang HK","Microsoft JhengHei","Noto Sans TC",sans-serif;background:var(--bg);color:var(--navy);-webkit-font-smoothing:antialiased;line-height:1.5}
+  header{position:relative;overflow:hidden;background:radial-gradient(circle at 85% 0%,rgba(245,158,11,.3),transparent 45%),linear-gradient(135deg,#0b1222,#1e293b 60%,#2b3a52);color:#fff;padding:46px 20px 84px}
+  header::before{content:"";position:absolute;right:-80px;top:-90px;width:260px;height:260px;border-radius:50%;border:38px solid rgba(245,158,11,.14)}
+  header::after{content:"";position:absolute;left:-60px;bottom:-110px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.04)}
+  .hd{max-width:1120px;margin:0 auto;position:relative;z-index:1}
+  .eye{font-size:11px;letter-spacing:4px;color:#fcd34d;margin-bottom:8px}
+  header h1{margin:0 0 10px;font-size:32px;letter-spacing:2px}
+  header h1 span{color:var(--gold2)}
+  header p{margin:0;color:#cbd5e1;font-size:14px;max-width:640px}
+  main{max-width:1120px;margin:-52px auto 0;padding:0 14px 48px;position:relative;z-index:1}
+  section{background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px;margin-bottom:18px;box-shadow:0 10px 30px rgba(15,23,42,.06)}
+  h2{margin:0 0 16px;font-size:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  h2 i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#fff;font-size:14px;font-weight:700;flex:none;box-shadow:0 4px 10px rgba(180,83,9,.3)}
+  h2 small{font-weight:400;color:var(--mut);font-size:12px}
+  h2 .sn{font-size:12px;font-weight:600;color:var(--gold);background:var(--soft);border:1px solid #fcd34d;border-radius:999px;padding:2px 10px}
+  h2 .sn:empty{display:none}
+  .hide{display:none!important}
+  .drop{display:block;border:2px dashed var(--gold2);background:linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:16px;padding:36px 20px;text-align:center;cursor:pointer;font-weight:700;font-size:16px;transition:.15s}
+  .drop:hover,.drop.over{background:#fde68a;transform:translateY(-2px);box-shadow:0 10px 24px rgba(245,158,11,.22)}
+  .drop small{display:block;font-weight:400;font-size:13px;color:var(--mut);margin-top:6px}
+  .drop input{display:none}
+  .status{margin-top:10px;font-size:13px;color:var(--mut);white-space:pre-line;line-height:1.7}
+  .status.err{color:var(--red)}
+  input[type=text],input[type=number],select{border:1.5px solid var(--line2);border-radius:10px;padding:8px 11px;font-size:14px;font-family:inherit;background:#fff;color:var(--navy);outline:none;transition:.15s}
+  input:focus,select:focus{border-color:var(--gold2);box-shadow:0 0 0 4px rgba(245,158,11,.18)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .modebar{position:sticky;top:8px;z-index:30;margin-bottom:18px}
+  .schbar{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:16px;padding:7px 10px;margin-bottom:6px;box-shadow:0 10px 28px rgba(15,23,42,.14)}
+  .schbar>span{font-size:13px;font-weight:700;color:var(--mut);flex:none}
+  .schbar .chips{margin:0;flex:1;flex-wrap:nowrap;overflow-x:auto}
+  .schbar .chips button{flex:none;white-space:nowrap}
+  .tabs{display:flex;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:16px;padding:5px;box-shadow:0 10px 28px rgba(15,23,42,.14)}
+  .tabs button{flex:1;border:0;background:transparent;padding:12px;border-radius:12px;font-size:15px;font-weight:700;color:var(--mut);cursor:pointer;font-family:inherit;transition:.15s}
+  .tabs button.on{background:linear-gradient(135deg,#0f172a,#334155);color:#fff;box-shadow:0 4px 12px rgba(15,23,42,.3),inset 0 -3px 0 var(--gold2)}
+  .tabs button:disabled{opacity:.35;cursor:not-allowed}
+  .sel{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  .sel b{font-size:30px;letter-spacing:.5px}
+  .sel span{font-size:18px;color:var(--gold);font-weight:700;background:var(--soft);border-radius:999px;padding:1px 12px}
+  input[type=range]{width:100%;accent-color:var(--gold2);margin:8px 0 14px}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+  .chips button,.btn{border:1.5px solid var(--line2);background:#fff;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;color:var(--navy);font-family:inherit;transition:.15s}
+  .chips button:hover,.btn:hover{border-color:var(--navy)}
+  .chips button:active,.btn:active{transform:scale(.97)}
+  .btn:disabled{opacity:.6;cursor:wait}
+  .chips button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  #sch2 button.on{background:var(--gold);border-color:var(--gold);font-weight:700}
+  #cpv button{border-width:2px;font-weight:600}
+  #cpk button.on,#xpS button.on{background:var(--gold);border-color:var(--gold)}
+  #itK button.on,#xpK button.on{background:var(--teal);border-color:var(--teal)}
+  .itbar{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;font-size:13px}
+  .itbar>span{flex:none;font-weight:700;color:var(--mut);padding-top:7px}
+  .itbar .chips{margin:0}
+  .btn.pri{background:linear-gradient(135deg,#0f172a,#334155);color:#fff;border-color:transparent;font-weight:600;box-shadow:0 4px 10px rgba(15,23,42,.2)}
+  .btn.pri:hover{background:var(--navy2)}
+  .btn.gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#fff;border-color:transparent;font-weight:600;box-shadow:0 4px 10px rgba(180,83,9,.25)}
+  .seg{display:inline-flex;background:var(--bg);border-radius:10px;padding:3px;border:1px solid var(--line)}
+  .seg button{border:0;background:transparent;padding:7px 13px;border-radius:8px;font-size:13px;font-weight:600;color:var(--mut);cursor:pointer;font-family:inherit}
+  .seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(15,23,42,.15)}
+  .seg button:disabled{opacity:.4;cursor:not-allowed}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+  .tile{border:1px solid var(--line);border-radius:14px;padding:14px 15px;background:#fff;transition:.15s}
+  .tile:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(15,23,42,.08)}
+  .tile small{display:block;color:var(--mut);font-size:12px;margin-bottom:4px}
+  .tile b{font-size:19px}
+  .tile.hi{background:linear-gradient(135deg,#0f172a,#334155);border-color:transparent;box-shadow:inset 0 3px 0 var(--gold2)}
+  .tile.hi small{color:#cbd5e1}
+  .tile.hi b{color:#fcd34d}
+  .calc{background:var(--bg);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.9}
+  .calc summary{cursor:pointer;font-weight:600;color:var(--mut)}
+  .calc div{white-space:pre-line;margin-top:6px}
+  .kset{background:var(--bg);border-radius:12px;padding:12px 14px;font-size:13px;margin-top:12px}
+  .kset summary{cursor:pointer;font-weight:600;color:var(--mut)}
+  .kset[open] summary{margin-bottom:10px}
+  .tbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:18px 0 10px;padding-top:16px;border-top:1px dashed var(--line2)}
+  .tbar .sp{flex:1}
+  .tw{overflow-x:auto;border:1px solid var(--line2);border-radius:14px}
+  .tw.tall{max-height:70vh;overflow:auto}
+  .tw::-webkit-scrollbar{height:8px;width:8px}
+  .tw::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px}
+  table{border-collapse:collapse;width:100%;font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}
+  th,td{padding:9px 12px;text-align:right;border-bottom:1px solid var(--line);border-right:1px solid var(--line)}
+  th:last-child,td:last-child{border-right:0}
+  tbody tr:last-child td{border-bottom:0}
+  thead th{background:var(--navy);color:#fff;font-size:13px;font-weight:600;text-align:center;position:sticky;top:0;z-index:2}
+  th.hp{background:#9f1239}th.hn{background:var(--navy)}th.ho{background:var(--teal)}
+  tbody td{background:#fff}
+  tbody tr:nth-child(even) td{background:#f8fafc}
+  tbody td:first-child{font-weight:700;text-align:center}
+  td.cg{color:var(--teal)}
+  td.cn{color:#7c3aed}
+  td.ct{font-weight:700}
+  td.cr{color:var(--gold);font-weight:700}
+  td.cp{color:#9f1239}
+  td.co{color:var(--teal)}
+  td.best{background:var(--soft)!important;color:var(--gold);font-weight:700}
+  td small{color:var(--mut);font-weight:400}
+  tr.cur td{background:#fef3c7!important}
+  tr.pick{cursor:pointer}
+  tr.pick:hover td{background:#fffbeb}
+  /* 回報分析表：分組標題 + 固定首欄 */
+  #tb thead tr.g th{height:30px;padding:0 12px;font-size:12px;letter-spacing:2px;border-right:2px solid #fff;border-bottom:0}
+  #tb thead tr:not(.g) th{top:29px;color:var(--navy);border-bottom:2px solid var(--line2)}
+  #tb th.ga{background:#0f172a}#tb th.gd{background:#1d4ed8}#tb th.gb{background:#0f766e}#tb th.gc{background:#b45309}
+  #tb th.la{background:#e2e8f0}#tb th.ld{background:#dbeafe}#tb th.lb{background:#ccfbf1}#tb th.lc{background:#fef3c7}
+  #tb tbody td:first-child{position:sticky;left:0;z-index:1;border-right:2px solid var(--line2)}
+  #tb tr.key td:first-child{box-shadow:inset 5px 0 0 var(--gold2)}
+  /* 方案對比：每個方案一欄 */
+  .csum{background:var(--soft);border:1px solid #fcd34d;border-radius:14px;padding:14px 18px;font-size:14px;margin-bottom:4px}
+  .csum>b{font-size:15px}
+  .csum ul{margin:6px 0 0;padding-left:20px;line-height:1.9}
+  .cph{display:flex;align-items:baseline;gap:8px;font-weight:700;font-size:17px;margin:22px 0 8px;padding-left:10px;border-left:5px solid var(--gold2)}
+  .cph small{font-weight:400;font-size:13px;color:var(--mut)}
+  table.cmp td{font-size:15px;padding:11px 14px}
+  table.cmp thead th{padding:10px 12px}
+  table.cmp thead th.sh{white-space:normal;min-width:140px;max-width:240px;line-height:1.35;font-size:13px}
+  table.cmp th.sh .ty{display:inline-block;font-size:11px;font-weight:400;background:rgba(255,255,255,.2);border-radius:999px;padding:0 9px;margin-top:4px}
+  table.cmp tbody td:first-child{background:#f1f5f9!important;border-right:2px solid var(--line2)}
+  table.cmp td.df{color:var(--mut);font-size:13px}
+  #pt td{text-align:center}
+  #mpTb th{padding:6px}
+  #mpTb select{font-size:12px;padding:5px 6px;max-width:150px}
+  .note{font-size:12px;color:var(--mut);margin-top:10px;line-height:1.7}
+  .foot{margin-top:12px;font-size:14px;font-weight:600;background:var(--soft);border-left:4px solid var(--gold2);border-radius:10px;padding:10px 14px}
+  label.ck{font-size:13px;display:inline-flex;align-items:center;gap:4px}
+  .msr{padding:8px 10px;border-radius:12px;border:1px solid transparent;margin-bottom:6px;font-size:13px;opacity:.55}
+  .msr.act{opacity:1;background:var(--soft);border-color:#fcd34d}
+  .msr input{flex:1;min-width:200px}
+  .tag{display:inline-block;min-width:64px;text-align:center;padding:4px 10px;border-radius:999px;color:#fff;font-weight:700;font-size:12px}
+  .tag.b{background:var(--teal)}.tag.w{background:var(--blue)}
+  .step{border:1px solid var(--line);border-radius:14px;padding:14px 16px 4px;margin-bottom:12px;background:#fcfcfe}
+  .step .chips{margin-bottom:10px}
+  .step .row{margin-bottom:10px}
+  .sl{font-size:14px;font-weight:700;margin-bottom:10px}
+  .sl b{display:inline-block;background:var(--navy);color:#fff;border-radius:6px;padding:2px 8px;font-size:12px;margin-right:8px}
+  .sl small{font-weight:400;color:var(--mut)}
+  .xlbox{margin-top:12px;border:1px solid #fcd34d;background:var(--soft);border-radius:14px;padding:14px 16px}
+  #xlList{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+  #xlList label{font-size:14px}
+  .adv{text-align:center;margin:4px 0 18px}
+  .adv button{border:1px dashed var(--line2);background:transparent;color:var(--mut);border-radius:999px;padding:8px 18px;font-size:13px;cursor:pointer;font-family:inherit}
+  .adv button:hover{color:var(--navy);border-color:var(--navy)}
+  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:10px 22px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;box-shadow:0 8px 24px rgba(15,23,42,.3);white-space:nowrap}
+  #toast.on{opacity:1;transform:translateX(-50%)}
+  @media(max-width:600px){header h1{font-size:25px}section{padding:16px}th,td{padding:8px 9px;font-size:13px}table.cmp td{font-size:14px;padding:9px 10px}table.cmp thead th.sh{min-width:110px}}
+
+  /* ===== PDF 範本（畫面外渲染；直向 794×1123px，橫向 1123×794px） ===== */
+  #pdfWrap{position:absolute;left:-10000px;top:0}
+  .pp{width:794px;height:1123px;background:#fff;color:#0f172a;display:flex;flex-direction:column;overflow:hidden;font-family:"PingFang HK","Microsoft JhengHei","Noto Sans TC","Heiti TC",sans-serif;line-height:1.4}
+  .pp.ls{width:1123px;height:794px}
+  .pp-head{height:104px;flex:none;background:#0f172a;color:#fff;padding:0 46px;display:flex;justify-content:space-between;align-items:center;gap:24px}
+  .pp-hl{flex:1;min-width:0}
+  .pp-eye{font-size:11px;letter-spacing:3px;color:#fcd34d}
+  .pp-title{font-size:24px;font-weight:700;letter-spacing:1px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pp-date{flex:none;text-align:right;border-left:3px solid #f59e0b;padding-left:14px}
+  .pp-date small{display:block;font-size:10.5px;color:#cbd5e1}
+  .pp-date b{display:block;font-size:17px}
+  .pp-gold{height:5px;flex:none;background:#f59e0b}
+  .pp-body{flex:1;padding:18px 46px 0;overflow:hidden}
+  .pp-foot{flex:none;height:54px;margin:0 46px;border-top:1px solid #cbd5e1;display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:9.5px;color:#64748b}
+  .pp-foot span:last-child{flex:none;font-weight:700;color:#0f172a}
+  .pp-cards{display:flex;gap:8px;height:80px;margin-bottom:6px}
+  .pp-cards div{flex:1;border:1px solid #e2e8f0;border-top:3px solid #0f172a;border-radius:8px;background:#f8fafc;display:flex;flex-direction:column;justify-content:center;text-align:center;padding:0 6px}
+  .pp-cards div.hi{background:#fffbeb;border-color:#fcd34d;border-top-color:#b45309}
+  .pp-cards small{font-size:10.5px;color:#64748b}
+  .pp-cards b{font-size:14.5px;line-height:1.25;margin-top:3px}
+  .pp-cards .hi b{color:#b45309}
+  .pp-sec{height:26px;line-height:26px;margin:14px 0 8px;font-size:14.5px;font-weight:700;border-left:5px solid #f59e0b;padding-left:10px}
+  .pp-bar{height:36px;line-height:36px;margin-top:10px;background:#fef3c7;border-radius:8px;padding:0 14px;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden}
+  .pp-note{margin-top:8px;font-size:10px;color:#64748b;line-height:1.5}
+  .pp-use{display:inline-block;padding:1px 10px;border-radius:99px;font-weight:700;font-size:11px}
+  .pp-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+  .pp table{width:100%;border-collapse:collapse;font-size:11.5px;white-space:nowrap}
+  .pp table.sm{font-size:10.5px}
+  .pp thead th{position:static;height:30px;padding:0 8px;background:#0f172a;color:#fff;font-size:10.5px;font-weight:700;text-align:center;border:1px solid #fff}
+  .pp thead tr.g th{height:24px;font-size:11px}
+  .pp thead th.ga{background:#0f172a}.pp thead th.gb{background:#0f766e}.pp thead th.gc{background:#b45309}.pp thead th.gd{background:#1d4ed8}.pp thead th.gp{background:#9f1239}
+  .pp thead th.la{background:#e2e8f0;color:#0f172a}.pp thead th.lb{background:#ccfbf1;color:#0f172a}.pp thead th.lc{background:#fef3c7;color:#0f172a}.pp thead th.ld{background:#dbeafe;color:#0f172a}.pp thead th.lp{background:#ffe4e6;color:#0f172a}
+  .pp tbody tr td{height:27px;padding:0 8px;text-align:right;font-weight:400;background:#fff;color:#0f172a;border:0;border-bottom:1px solid #e2e8f0}
+  .pp table.sm thead th,.pp table.sm tbody tr td{padding:0 5px}
+  .pp tbody tr.z td{background:#f8fafc}
+  .pp tbody tr td.k{text-align:center;font-weight:700}
+  .pp tbody tr td.c{text-align:center}
+  .pp tbody tr td.l{text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+  .pp.ls tbody tr td.l{max-width:330px;font-weight:700}
+  .pp tbody tr td.b{font-weight:700}
+  .pp tbody tr td.r{font-weight:700;color:#b45309}
+  .pp tbody tr td.tp{color:#9f1239}
+  .pp tbody tr td.tt{color:#0f766e}
+  .pp tbody tr td.top{background:#fef3c7;color:#b45309;font-weight:700}
+  .pp td small{font-size:9.5px;color:#64748b;font-weight:400}
+  </style>
+  </head>
+  <body>
+  <header><div class="hd"><div class="eye">PROPOSAL RETURN ANALYSIS</div><h1>計劃書<span>回報分析</span></h1><p>上傳建議書 PDF（繁體或簡體），自動讀取「不提取」及「提取」兩種情況，可上傳多份作方案對比。</p></div></header>
+  <main>
+  <section>
+    <h2><i>1</i>上傳建議書</h2>
+    <label class="drop" id="drop">📄 點此選擇或拖放建議書 PDF<small>可選多份，或分次加入</small><input type="file" id="file" accept="application/pdf" multiple></label>
+    <div class="status" id="status">尚未上傳檔案。</div>
+    <div class="row" style="margin-top:8px"><button class="btn hide" id="mpOpen">🛠 讀取不到或數字不對？手動對應欄位</button></div>
+    <div id="schBox" class="hide" style="margin-top:14px">
+      <div class="chips" id="sch"></div>
+      <div class="row"><span style="font-size:13px">方案名稱</span><input type="text" id="name" style="flex:1;min-width:200px"><button class="btn" id="schDel">移除此方案</button><button class="btn pri" id="pdf">⬇ 匯出 PDF</button><button class="btn gold" id="xl">⬇ 匯出 Excel</button></div>
+      <div id="xlBox" class="xlbox hide">
+        <div id="xlSchW">
+          <div class="sl">匯出哪些方案？<small>（可多選；多於一個時會放在同一個檔案內）</small></div>
+          <div id="xlList"></div>
+        </div>
+        <div class="sl">匯出哪些部分？<small>（點擊加入或移出）</small></div>
+        <div class="chips" id="xpS"></div>
+        <div class="sl">表格包含哪些事項？<small>（保單年度及年齡必定包含；各表格只顯示其原有而又被選中的事項。方案對比的數字跟隨「對比設定」第二步）</small></div>
+        <div class="chips" id="xpK"></div>
+        <div class="row"><button class="btn" id="xlAll">全選</button><button class="btn" id="xpSame">跟隨畫面所選事項</button><button class="btn gold" id="xlGo">⬇ 匯出</button><button class="btn" id="xlX">取消</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="mapSec" class="hide">
+    <h2><i>🛠</i>手動對應欄位 <small>適用於其他公司或不同版面的建議書</small></h2>
+    <div class="note" style="margin:0 0 12px">① 選擇含有逐年數字的表格 → ② 在每一欄上方選擇該欄代表甚麼（請對照建議書原文）→ ③ 按「套用」。<br>不提取：最少需要「保單年度」「已繳保費（累計）」「退保總額」。提取：最少需要「保單年度」「當年提取」或「累計提取」，以及「退保總額」（提取後）。</div>
+    <div class="row" style="margin-bottom:10px;font-size:13px"><span>表格</span><select id="mpG"></select><span>這個表格是</span><select id="mpT"><option value="base">不提取（建立新方案）</option><option value="wd">提取（加到目前選中的方案）</option></select></div>
+    <div class="tw"><table id="mpTb"></table></div>
+    <div class="status err" id="mpMsg"></div>
+    <div class="row" style="margin-top:10px"><button class="btn pri" id="mpOk">套用</button><button class="btn" id="mpX">關閉</button></div>
+  </section>
+
+  <div id="app" class="hide">
+  <div class="modebar">
+    <div class="schbar hide" id="schBar"><span>查看方案</span><div class="chips" id="sch2"></div></div>
+    <div class="tabs"><button id="mBase" class="on">不提取</button><button id="mWd">提取</button></div>
+  </div>
+
+  <section>
+    <h2><i>2</i>回報分析<span class="sn"></span> <small>拖動滑桿，或點擊下表任何一行，即可查看該年度的回報</small></h2>
+    <div class="itbar"><span>顯示事項</span><div class="chips" id="itK"></div></div>
+    <div class="sel"><b id="yr"></b><span id="ag"></span></div>
+    <input type="range" id="sl" min="0" max="0" value="0">
+    <div class="tiles" id="tiles"></div>
+    <details class="calc"><summary>計算過程（點擊展開）</summary><div id="calc"></div></details>
+    <div class="tbar">
+      <div class="seg" id="vw"><button data-v="key" class="on">重點年度</button><button data-v="all">全部年度</button></div>
+      <span class="sp"></span>
+      <button class="btn pri" id="tbCopy">複製表格</button>
+    </div>
+    <div class="tw tall"><table id="tb"><thead></thead><tbody></tbody></table></div>
+    <div class="note">在上方「顯示事項」點擊，可選擇要看哪些事項（同時影響上方的數字卡及下表的欄位）。黃色底為目前選中的年度；在「全部年度」中，左側有金色線的是重點年度。</div>
+    <details class="kset"><summary>⚙ 設定重點年度（「不提取」與「提取」各自設定，互不影響）</summary>
+      <div class="row msr" id="msRB"><span class="tag b">不提取</span><span>重點保單年度</span><input type="text" id="msB" value="5,10,15,20,25,30,40,50,60,70,80,90,100"></div>
+      <div class="row msr" id="msRW"><span class="tag w">提取</span><span>重點保單年度</span><input type="text" id="msW" value="5,10,15,20,25,30,40,50,60,70,80,90,100"></div>
+      <div class="note">以逗號分隔。匯出 Excel 時，摘要的「不提取」部分使用重點年度，「提取」部分則先逐年列出首 10 個保單年度，其後按提取用途的時段顯示（同樣附回報分析）。匯出 PDF 時，「不提取」及「提取」均使用各自的重點年度。</div>
+    </details>
+  </section>
+
+  <section id="planSec" class="hide">
+    <h2><i>3</i>提取用途規劃摘要<span class="sn"></span></h2>
+    <div class="tw"><table id="pt"><thead><tr><th>年齡</th><th>保單年度</th><th>每年提取</th><th>提取年數</th><th>合共提取</th><th>提取後帳戶金額</th><th>用途</th><th>備註（可不填）</th><th></th></tr></thead><tbody></tbody></table></div>
+    <div class="foot" id="pNote"></div>
+    <div class="row" style="margin-top:12px"><button class="btn pri" id="pCopy">複製摘要</button><button class="btn" id="pAuto">重設時段</button></div>
+    <div class="note">時段及金額自動跟隨建議書的提取安排，只需選擇用途。如想把一個時段分成不同用途，按「分拆」。<br>「提取後帳戶金額」為該時段最後一次提取的保單年度終結時，建議書所示的提取後退保金額（包含非保證金額）。</div>
+  </section>
+
+  <section id="cmpSec" class="hide">
+    <h2><i>4</i>方案對比 <small>每個方案一欄，左右對照</small></h2>
+    <details class="kset" open style="margin:0 0 14px"><summary>⚙ 對比設定（設定好後可收起）</summary>
+      <div class="step"><div class="sl"><b>第一步</b>比較哪些方案？<small>（點擊加入或移出，最少兩個）</small></div><div class="chips" id="cpv"></div></div>
+      <div class="step"><div class="sl"><b>第二步</b>比較甚麼數字？<small>（可多選）</small></div><div class="chips" id="cpk"></div></div>
+      <div class="step" style="margin-bottom:0"><div class="sl"><b>第三步</b>看哪些時間點？</div>
+        <div class="row">
+          <div class="seg" id="cpb"><button data-v="y" class="on">同一保單年度</button><button data-v="a">同一年齡</button></div>
+          <div class="seg" id="cpr"><button data-v="pick" class="on">自訂</button><button data-v="5">每 5 年</button><button data-v="10">每 10 年</button><button data-v="all">每一年</button></div>
+          <input type="text" id="cpp" value="10,20,30,40,50" style="flex:1;min-width:160px">
+        </div>
+      </div>
+    </details>
+    <div class="row" style="margin-bottom:12px;font-size:13px">
+      <span>顯示方式</span>
+      <div class="seg" id="cpl"><button data-v="m" class="on">每個數字一張表</button><button data-v="p">每個時間點一張表</button></div>
+      <span style="flex:1"></span>
+      <button class="btn pri" id="cpCopy">複製對比</button>
+    </div>
+    <div id="cpOut"></div>
+    <div class="note">★ 及金色底為各方案中的最高值。只比較兩個方案時，最右一欄顯示兩者相差。<br>「每個數字一張表」適合看每個方案隨時間的變化；「每個時間點一張表」適合集中看某一年各方案的全部數字。</div>
+  </section>
+
+  <div class="adv"><button id="scT"></button></div>
+  <section id="scSec" class="hide">
+    <h2><i>5</i>悲觀／樂觀情景<span class="sn"></span> <small>跟隨上方「不提取／提取」模式；「建議書數字」按建議書情景頁面有列出的年份顯示</small></h2>
+    <div class="row" style="margin-bottom:10px;font-size:13px">
+      <span>數據來源</span><div class="seg" id="scS"><button data-v="pdf">建議書數字</button><button data-v="est">自行估算</button></div>
+      <span class="row" id="scEst">悲觀：非保證金額 × <input type="number" id="scP" value="70" min="0" max="100" style="width:72px">%　樂觀：非保證金額 × <input type="number" id="scO" value="130" min="100" max="300" style="width:72px">%</span>
+      <button class="btn pri" id="scCopy">複製情景</button>
+    </div>
+    <div class="tw"><table id="sct"><thead></thead><tbody></tbody></table></div>
+    <div class="note" id="scNote"></div>
+  </section>
+  </div>
+
+  <section><details><summary style="cursor:pointer;font-size:13px;color:var(--mut)">解析診斷（讀取有問題時請截圖這部分）</summary><div class="status" id="diag">—</div></details></section>
+  </main>
+  <div id="pdfWrap"></div>
+  <div id="toast"></div>
+
+  <script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+  const $=id=>document.getElementById(id);
+  const fmt=n=>n==null?'—':Math.round(n).toLocaleString('en-US');
+  const pct=v=>v==null||!isFinite(v)?'—':(v*100).toFixed(2)+'%';
+  const mul=v=>v==null||!isFinite(v)?'—':v.toFixed(2)+' 倍';
+  const yrs=v=>v==null||!isFinite(v)?'—':v.toFixed(2)+' 年';
+  const sum=a=>a.reduce((x,y)=>x+y,0);
+  const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  const USES={'教育金':'🎓','退休金':'🏖','創業':'🚀','結婚':'💍','現金流':'💵','置業':'🏠','其他':'✏️'};
+  const PAL=['#2563eb','#d97706','#0f766e','#7c3aed','#dc2626','#0891b2','#db2777','#65a30d'];
+  const MET=[{k:'prem',n:'已繳保費',f:fmt,x:'n',nb:1},{k:'cumW',n:'累計提取',f:fmt,x:'n'},{k:'sv',n:'退保金額',f:fmt,x:'n'},{k:'gcv',n:'保證金額',f:fmt,x:'n'},{k:'ng',n:'非保證金額',f:fmt,x:'n'},{k:'total',n:'預期收益',f:fmt,x:'n'},{k:'mult',n:'回報倍數',f:mul,x:'x'},{k:'simple',n:'單利',f:pct,x:'p'},{k:'irr',n:'IRR 複利',f:pct,x:'p'},{k:'db',n:'身故賠償額',f:fmt,x:'n'}];
+  /* 可選擇顯示／匯出的事項（wd：只在提取情況下適用） */
+  const ITEMS=[{k:'prem',n:'已繳保費'},{k:'w',n:'當年提取',wd:1},{k:'cumW',n:'累計提取',wd:1},{k:'gcv',n:'保證金額'},{k:'ng',n:'非保證金額'},{k:'sv',n:'退保金額'},{k:'db',n:'身故賠償額'},{k:'total',n:'預期收益'},{k:'mult',n:'回報倍數'},{k:'simple',n:'單利'},{k:'irr',n:'IRR 複利'}];
+  /* 匯出時可選擇的部分 */
+  const XS=[['b','不提取'],['w','提取'],['plan','提取用途規劃'],['scn','悲觀／樂觀情景'],['cmp','方案對比']];
+  const DISC='非保證金額按建議書現時假設計算，實際金額可能較高或較低，一切以保單契約及建議書為準。';
+  /* 簡體 → 繁體（只用於辨認頁面標題） */
+  const S2T={'现':'現','举':'舉','详':'詳','细':'細','说':'說','后':'後','发':'發','还':'還','额':'額','赔':'賠','偿':'償','观':'觀','乐':'樂','单':'單','货':'貨','币':'幣','计':'計','划':'劃'};
+  const toTrad=s=>s.replace(/[现举详细说后发还额赔偿观乐单货币计划]/g,c=>S2T[c]);
+  /* view：回報分析表顯示「重點年度」(key) 或「全部年度」(all) */
+  let schemes=[],ai=0,mode='base',sel=1,pend=null,showSc=false,scSrc=null,view='key';
+  /* showK：畫面上回報分析顯示的事項；xp：匯出設定（S 部分／K 事項） */
+  let showK=new Set(ITEMS.map(i=>i.k));
+  const xp={S:new Set(['b','w','plan','cmp']),K:new Set(ITEMS.map(i=>i.k))};
+  /* 方案對比設定：by = 按保單年度(y)／年齡(a)；rg = 時間點範圍；K = 已選的數字；ly = 顯示方式（m 每個數字一張表／p 每個時間點一張表） */
+  const cp={by:'y',rg:'pick',ly:'m',K:['sv','total','mult','irr']};
+  const S=()=>schemes[ai];
+  function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),1600);}
+
+  /* ---------- PDF 讀取 ---------- */
+  /* 數字辨認：容許千位逗號、小數、貨幣符號、括號負數；「-」「—」「N/A」當作 0 */
+  function num(t){
+    let s=t.replace(/^(HK|US|RMB|CNY)?[$¥]/i,'').replace(/[,，]/g,'');
+    if(/^[-–—]+$/.test(s)||/^(N\/A|NA|不適用|不适用)$/i.test(s))return 0;
+    let neg=false;if(/^\(.+\)$/.test(s)){neg=true;s=s.slice(1,-1);}
+    s=s.replace(/[歲岁]$/,'');
+    if(!/^-?\d+(\.\d+)?$/.test(s))return null;
+    return neg?-(+s):+s;
+  }
+  async function readPdf(file){
+    const buf=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf,cMapUrl:'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',cMapPacked:true}).promise;
+    const pages=[];
+    for(let p=1;p<=pdf.numPages;p++){
+      const page=await pdf.getPage(p);
+      const vp=page.getViewport({scale:1});
+      const tc=await page.getTextContent();
+      const items=tc.items.filter(i=>i.str&&i.str.trim()).map(i=>{const t=pdfjsLib.Util.transform(vp.transform,i.transform);return{s:i.str.trim(),x:t[4],y:t[5]};});
+      const text=items.map(i=>i.s).join('').replace(/\s+/g,'');
+      items.sort((a,b)=>a.y-b.y||a.x-b.x);
+      const lines=[];
+      for(const it of items){const L=lines[lines.length-1];if(L&&Math.abs(L.y-it.y)<=2.5)L.items.push(it);else lines.push({y:it.y,items:[it]});}
+      const rows=[];
+      for(const L of lines){
+        L.items.sort((a,b)=>a.x-b.x);
+        let tk=L.items.flatMap(i=>i.s.split(/\s+/)).filter(t=>t);
+        /* 「65岁」這類以年齡表示的行：記低 ageRow，之後換算成保單年度（「岁」字獨立成一格時亦處理） */
+        let ageRow=tk.length>0&&/\d[歲岁]$/.test(tk[0]);
+        if(tk.length>1&&/^[歲岁]$/.test(tk[1])&&/^\d+$/.test(tk[0])){ageRow=true;tk=[tk[0]].concat(tk.slice(2));}
+        const ns=tk.map(num);
+        if(ns.length>=5&&ns.every(v=>v!=null)&&ns.filter(v=>v!==0).length>=2){if(ageRow)ns.ageRow=true;rows.push(ns);}
+      }
+      pages.push({n:p,text,nt:toTrad(text),rows});
+    }
+    return pages;
+  }
+  function modal(rows){
+    const cnt={};rows.forEach(r=>cnt[r.length]=(cnt[r.length]||0)+1);
+    let best=0,bn=0;for(const k in cnt)if(cnt[k]>bn){bn=cnt[k];best=+k;}
+    return rows.filter(r=>r.length===best);
+  }
+  const cols=rows=>Array.from({length:rows[0].length},(_,c)=>rows.map(r=>r[c]));
+  /* 年度欄：遞增整數（容許跳年，例如 1–20 之後每 5 年）；年齡欄：與年度欄相差固定 */
+  const incCol=c=>c.every((v,k)=>Number.isInteger(v)&&v>0&&v<=150&&(k===0||v>c[k-1]));
+  const yearCol=(C,one)=>{const i=C.findIndex(c=>incCol(c)&&(!one||c[0]===1));return i<0?undefined:i;};
+  const ageCol=(C,yi)=>{const i=C.findIndex((c,j)=>j!==yi&&c.every((v,k)=>Number.isInteger(v)&&v>=0&&v<=150&&v-C[yi][k]===c[0]-C[yi][0]));return i<0?undefined:i;};
+  const same=(a,b)=>a.every((v,k)=>Math.abs(v-b[k])<=2);
+  function findSum(C,ex){
+    const R=C[0].length,idx=[];for(let i=0;i<C.length;i++)if(!ex.includes(i))idx.push(i);
+    const ok=(t,ps)=>{if(ps.some(p=>same(C[p],C[t])))return false;for(let k=0;k<R;k++){let s=0;for(const p of ps)s+=C[p][k];if(Math.abs(s-C[t][k])>2)return false;}return true;};
+    for(const size of [3,2]){
+      for(const t of idx){
+        if(sum(C[t])<=0)continue;
+        const o=idx.filter(i=>i!==t);
+        for(let a=0;a<o.length;a++)for(let b=a+1;b<o.length;b++){
+          if(size===2){if(ok(t,[o[a],o[b]]))return{t,parts:[o[a],o[b]]};}
+          else for(let c=b+1;c<o.length;c++)if(ok(t,[o[a],o[b],o[c]]))return{t,parts:[o[a],o[b],o[c]]};
+        }
+      }
+    }
+    return null;
+  }
+  /* 找出表內「所有」屬於總額的欄（等於另外 2 或 3 欄之和），用於同一張表並列悲觀及樂觀總額的情景頁 */
+  function findSums(C,ex){
+    const R=C[0].length,idx=[];for(let i=0;i<C.length;i++)if(!ex.includes(i))idx.push(i);
+    const ok=(t,ps)=>{if(ps.some(p=>same(C[p],C[t])))return false;for(let k=0;k<R;k++){let s=0;for(const p of ps)s+=C[p][k];if(Math.abs(s-C[t][k])>2)return false;}return true;};
+    const T=[];
+    for(const t of idx){
+      if(sum(C[t])<=0)continue;
+      const o=idx.filter(i=>i!==t);let hit=false;
+      for(let a=0;a<o.length&&!hit;a++)for(let b=a+1;b<o.length&&!hit;b++){
+        if(ok(t,[o[a],o[b]]))hit=true;
+        else for(let c=b+1;c<o.length&&!hit;c++)if(ok(t,[o[a],o[b],o[c]]))hit=true;
+      }
+      if(hit)T.push(t);
+    }
+    return T;
+  }
+  function deathCol(C,Sv,ex){
+    let best=-1,bs=Infinity;
+    C.forEach((c,i)=>{if(ex.includes(i))return;if(!c.every((v,k)=>v>=Sv[k]-2))return;if(same(c,Sv))return;const s=sum(c);if(s<bs){bs=s;best=i;}});
+    return best<0?Sv.slice():C[best];
+  }
+  function parseDetail(rows){
+    if(rows.length<3)return null;
+    let C=cols(rows),yi=yearCol(C,true);
+    if(yi===undefined){ /* 有重複表格時，只保留第一欄由 1 開始遞增的行 */
+      const f=[];rows.forEach(r=>{if(f.length?r[0]>f[f.length-1][0]:r[0]===1)f.push(r);});
+      if(f.length<5)return null;rows=f;C=cols(rows);yi=yearCol(C,true);if(yi===undefined)return null;
+    }
+    const ag=ageCol(C,yi);
+    const sm=findSum(C,[yi,ag]);if(!sm)return null;
+    const Sv=C[sm.t],L=rows.length-1,mid=Math.floor(L/2);
+    let pi=-1;
+    C.forEach((c,i)=>{if(i===yi||i===ag)return;if(c[0]>0&&c[L]===c[mid]&&c.every((v,k)=>k===0||v>=c[k-1])){if(pi<0||c[L]<C[pi][L])pi=i;}});
+    if(pi<0)return null;
+    const dup=i=>C.some((c,j)=>j!==i&&c.every((v,k)=>v===C[i][k]));
+    const g=sm.parts.filter(i=>!dup(i)),gi=g.length===1?g[0]:-1;
+    const db=deathCol(C,Sv,[yi,ag,pi]);
+    return{hasG:gi>=0,rows:rows.map((_,k)=>({y:C[yi][k],age:ag!==undefined?C[ag][k]:C[yi][k],prem:C[pi][k],gcv:gi>=0?C[gi][k]:null,sv:Sv[k],db:db[k],w:0,cumW:0}))};
+  }
+  function parseWS(rows,base,hasG){
+    if(rows.length<3)return null;
+    const C=cols(rows),yi=yearCol(C,true);if(yi===undefined)return null;
+    const ag=ageCol(C,yi);
+    const sm=findSum(C,[yi,ag]);if(!sm)return null;
+    const used=[yi,ag,sm.t,...sm.parts];let wi=-1,ws=Infinity,z=false;
+    C.forEach((c,i)=>{if(used.includes(i))return;const s=sum(c);if(s<=0)return;const z0=c[0]===0;if((z0&&!z)||(z0===z&&s<ws)){wi=i;ws=s;z=z0;}});
+    if(wi<0)return null;
+    let gp=-1;
+    if(hasG){const bm={};base.forEach(r=>bm[r.y]=r.gcv);let bd=Infinity;
+      sm.parts.forEach(p=>{let d=0;for(let k=0;k<Math.min(5,rows.length);k++)d+=Math.abs(C[p][k]-(bm[C[yi][k]]||0));if(d<bd){bd=d;gp=p;}});}
+    else{const f=sm.parts.find(p=>C[p][0]>0);if(f!==undefined)gp=f;}
+    let cum=0;
+    return rows.map((_,k)=>{cum+=C[wi][k];return{y:C[yi][k],age:ag!==undefined?C[ag][k]:C[yi][k],w:C[wi][k],cumW:cum,sv:C[sm.t][k],gcv:gp>=0?C[gp][k]:null,db:null};});
+  }
+  function parseWDeath(rows,wd){
+    if(rows.length<3)return false;
+    const C=cols(rows),yi=yearCol(C,true);if(yi===undefined)return false;
+    const ag=ageCol(C,yi);
+    const m={};wd.forEach(r=>m[r.y]=r.sv);
+    const Sv=C[yi].map(y=>m[y]);if(Sv.some(v=>v===undefined))return false;
+    const db=deathCol(C,Sv,[yi,ag]);const dm={};C[yi].forEach((y,k)=>dm[y]=db[k]);
+    wd.forEach(r=>{if(dm[r.y]!==undefined)r.db=dm[r.y];});
+    return true;
+  }
+  /* 把各頁的數字行，按「欄數相同 + 第一欄遞增 + 頁面相連」組合成表格（用於自動偵測及手動對應） */
+  function groups(pages){
+    const G=[];let cur=null;
+    pages.forEach(p=>{
+      const rs=modal(p.rows);if(!rs.length){cur=null;return;}
+      rs.forEach(r=>{
+        if(cur&&cur.n===r.length&&r[0]>cur.last&&p.n-cur.p2<=1)cur.rows.push(r);
+        else{cur={n:r.length,rows:[r],p1:p.n,ps:new Set()};G.push(cur);}
+        cur.last=r[0];cur.p2=p.n;cur.ps.add(p.n);
+      });
+    });
+    const out=G.filter(g=>g.rows.length>=5);
+    out.forEach(g=>g.text=pages.filter(p=>g.ps.has(p.n)).map(p=>p.nt).join(''));
+    return out;
+  }
+  /* 悲觀／樂觀情景：讀取每個表格內所有總額欄的「年度 → 退保總額」（同一張表可同時有悲觀及樂觀兩個總額），
+     再與現時假設比較，較低為悲觀、較高為樂觀 */
+  function parseScen(rows){
+    if(rows.length<3)return[];
+    const C=cols(rows),yi=yearCol(C,false);if(yi===undefined)return[];
+    const ag=ageCol(C,yi);
+    return findSums(C,[yi,ag]).map(t=>{const m={};C[yi].forEach((y,k)=>m[y]=C[t][k]);return m;});
+  }
+  function scenMaps(list,ref){
+    /* 以年齡表示的行（例如「65岁」）按投保年齡換算成保單年度 */
+    const off=ref.length?ref[0].age-ref[0].y:0;
+    const blocks=[];let cur=null;
+    list.forEach(pg=>modal(pg.rows).forEach(r0=>{
+      let r=r0;
+      if(r0.ageRow){const y=r0[0]-off;if(y<=0)return;r=[y].concat(r0.slice(1));}
+      if(cur&&cur.tag===pg.tag&&cur.rows[0].length===r.length&&r[0]>cur.last)cur.rows.push(r);
+      else{cur={tag:pg.tag,rows:[r]};blocks.push(cur);}
+      cur.last=r[0];
+    }));
+    const rm={};ref.forEach(r=>rm[r.y]=r.sv);const out={};
+    blocks.forEach(b=>{
+      const best={},T=b.tag==='p'||b.tag==='o'?b.tag:null;
+      parseScen(b.rows).forEach(m=>{
+        let lo=0,hi=0,d=0;
+        for(const y in m){if(rm[y]==null)continue;const x=m[y]-rm[y];d+=Math.abs(x);if(x<-2)lo++;else if(x>2)hi++;}
+        /* 悲觀欄應在（幾乎）所有年度都不高於現時假設，樂觀欄則不低於（容許一成例外）；
+           高低混雜的欄（例如情景頁內的身故賠償額）不使用，以免悲觀／樂觀數字放錯位置 */
+        let w=lo>0&&hi<=lo*0.1?'p':hi>0&&lo<=hi*0.1?'o':lo===0&&hi===0?T:null;
+        /* 頁面標題已明確是悲觀（或樂觀）時，方向相反的欄不使用 */
+        if(T&&w&&w!==T)w=null;
+        /* 同一表格內如有多個候選欄，取最接近現時假設的一欄 */
+        if(w&&(!best[w]||d<best[w].d))best[w]={d,m};
+      });
+      /* 較早讀到的表格優先，之後的表格只補上未有的年度 */
+      for(const w in best)out[w]=Object.assign({},best[w].m,out[w]);
+    });
+    /* 最後檢查：同一年度如「悲觀」高於「樂觀」，把兩者對調 */
+    if(out.p&&out.o)for(const y in out.p){if(out.o[y]!=null&&out.p[y]>out.o[y]){const t=out.p[y];out.p[y]=out.o[y];out.o[y]=t;}}
+    return out;
+  }
+  function irr(cf){
+    const npv=r=>cf.reduce((s,v,t)=>s+v/Math.pow(1+r,t),0);
+    let lo=-0.99,hi=1;if(npv(lo)*npv(hi)>0)return null;
+    for(let i=0;i<100;i++){const m=(lo+hi)/2;if(npv(lo)*npv(m)<=0)hi=m;else lo=m;}
+    return(lo+hi)/2;
+  }
+  /* pf[y]：第 y 個保單年度年初所繳保費（如建議書跳年，保費增幅平均攤分到中間年度） */
+  function premFlows(base){
+    const pf={};let prev=0,py=0;
+    base.forEach(r=>{const d=r.prem-prev,n=r.y-py;if(d>0)for(let y=py+1;y<=r.y;y++)pf[y]=d/n;prev=r.prem;py=r.y;});
+    return pf;
+  }
+  /* 預期收益 = 退保金額 + 累計提取 − 已繳保費；倍數 = 預期收益 ÷ 已繳保費；單利 = 倍數 ÷（平均收款時間 − 平均繳費時間）。提取當作年初收取。 */
+  function enrich(rows,pf){
+    rows.forEach((r,idx)=>{
+      const n=r.y,cf=new Array(n+1).fill(0);
+      let pT=0,wT=0;
+      for(let t=0;t<n;t++){const p=pf[t+1]||0;cf[t]-=p;pT+=p*t;}
+      for(let k=0;k<=idx;k++){const t=Math.max(0,rows[k].y-1);cf[t]+=rows[k].w;wT+=rows[k].w*t;}
+      cf[n]+=r.sv;
+      r.ng=r.gcv==null?null:r.sv-r.gcv;
+      r.gross=r.sv+r.cumW;r.total=r.gross-r.prem;r.mult=r.prem?r.total/r.prem:null;
+      r.tIn=r.gross>0?(wT+r.sv*n)/r.gross:null;r.tPay=r.prem>0?pT/r.prem:null;
+      r.dur=r.tIn!=null&&r.tPay!=null?r.tIn-r.tPay:null;
+      r.simple=r.dur>0&&r.mult!=null?r.mult/r.dur:null;
+      r.irr=irr(cf);
+    });
+  }
+  /* 以另一個退保金額（情景）重新計算某年度的預期收益及 IRR */
+  function calcAt(sc,r,wd,sv){
+    const n=r.y,cf=new Array(n+1).fill(0);
+    for(let t=0;t<n;t++)cf[t]-=sc.pf[t+1]||0;
+    if(wd)sc.wd.forEach(x=>{if(x.y<=n)cf[Math.max(0,x.y-1)]+=x.w;});
+    cf[n]+=sv;
+    return{sv,total:sv+r.cumW-r.prem,irr:irr(cf)};
+  }
+  function newScheme(name,base,hasG){
+    const sc={name,base,wd:null,hasG,cur:'',segs:[],cmp:{b:true,w:true},scn:{base:{},wd:{}},pf:premFlows(base)};
+    enrich(base,sc.pf);return sc;
+  }
+  function attachWd(sc,wd){
+    wd.forEach(r=>{let p=0;for(const b of sc.base){if(b.y<=r.y)p=b.prem;else break;}r.prem=p;});
+    enrich(wd,sc.pf);sc.wd=wd;autoSegs(sc);
+  }
+  async function parseFile(file){
+    const pages=await readPdf(file),dg=['【'+file.name+'】'];
+    const fail=msg=>({msg,dg,pages});
+    if(sum(pages.map(p=>p.text.length))<200)throw fail('這份 PDF 沒有可讀取的文字（可能是掃描圖片或相片），請索取電子版建議書。');
+    const dR=[],sR=[],xR=[],scB=[],scW=[];
+    pages.forEach(p=>{
+      const t=p.nt;let k='';
+      /* tag：頁面標題只有「悲觀情景」＝p，只有「樂觀情景」＝o，兩者皆有＝?（之後按數字高低判斷） */
+      const hp=t.includes('悲觀情景'),ho=t.includes('樂觀情景'),isSc=hp||ho,tag=!isSc?'':hp&&!ho?'p':ho&&!hp?'o':'?';
+      if(t.includes('現金提取舉例')){
+        if(isSc){if(t.includes('退保')){k='提取－悲觀／樂觀情景';scW.push({tag,rows:p.rows});}else k='略過（悲觀／樂觀情景，沒有退保金額）';}
+        else if(t.includes('現金提取後之退保發還金額')){k='提取－退保發還金額';sR.push(...p.rows);}
+        else if(t.includes('現金提取後之身故賠償額')){k='提取－身故賠償額';xR.push(...p.rows);}
+        else k='提取金額細分（不使用）';
+      }else if(t.includes('詳細說明')){k='不提取－詳細說明';dR.push(...p.rows);}
+      else if(isSc){
+        /* 只有身故賠償額的情景頁不使用，以免蓋過退保金額的情景 */
+        if(t.includes('身故賠償')&&!t.includes('退保發還'))k='略過（悲觀／樂觀情景－身故賠償額）';
+        else{k='不提取－悲觀／樂觀情景';scB.push({tag,rows:p.rows});}
+      }
+      if(k)dg.push(`第 ${p.n} 頁：${k}${isSc?'〔'+(tag==='p'?'悲觀':tag==='o'?'樂觀':'悲觀＋樂觀')+'〕':''}（數字行 ${p.rows.length}）`);
+      else if(p.rows.length>=8)dg.push(`第 ${p.n} 頁：未能辨認標題（數字行 ${p.rows.length}）｜頁面開頭：${p.text.slice(0,40)}`);
+    });
+    const warn=[];
+    let det=dR.length?parseDetail(modal(dR)):null,auto=false,G=null,ug=null;
+    if(!det){ /* 非預設格式：逐個表格嘗試，自動偵測 */
+      G=groups(pages);
+      G.forEach(g=>{const d=parseDetail(g.rows);if(d&&(!det||d.rows.length>det.rows.length)){det=d;ug=g;}});
+      if(det){auto=true;dg.push(`自動偵測：以第 ${ug.p1}–${ug.p2} 頁的表格（${ug.n} 欄）作為「不提取」`);
+        warn.push('並非預設格式，已用自動偵測讀取，請務必與建議書核對數字；如有錯誤請用「手動對應欄位」。');}
+    }
+    if(!det)throw fail('未能自動辨認這份建議書的表格。請在下方「手動對應欄位」指定各欄代表甚麼。');
+    const sc=newScheme(file.name.replace(/\.pdf$/i,''),det.rows,det.hasG);
+    const t0=pages.map(p=>p.text).join('');
+    const cm=t0.match(/保[單单][貨货][幣币][:：]([\u4e00-\u9fa5]{1,3}元)/);sc.cur=cm?cm[1]:'';
+    const nm=t0.match(/([\u4e00-\u9fa5\w]{2,24}(?:計劃|计划)（[^）]{1,10}）)/);
+    if(nm)sc.name=nm[1].replace(/^.*(有限公司|說明文件|说明文件)/,'');
+    let info=`結果：${sc.name}｜不提取 ${sc.base.length} 個年度`;
+    let wd=sR.length?parseWS(modal(sR),sc.base,sc.hasG):null;
+    if(!wd&&auto){
+      G.forEach(g=>{if(g===ug||!/提取|提款|WITHDRAW/i.test(g.text))return;const w=parseWS(g.rows,sc.base,sc.hasG);if(w&&(!wd||w.length>wd.length))wd=w;});
+      if(wd)dg.push('自動偵測：已找到提取表格');
+    }
+    if(wd){
+      const okD=xR.length?parseWDeath(modal(xR),wd):false;
+      attachWd(sc,wd);
+      info+=`｜提取 ${wd.length} 個年度，合共提取 ${fmt(wd[wd.length-1].cumW)}`;
+      if(!okD)warn.push('未能讀取提取後的身故賠償額。');
+    }else if(sR.length)warn.push('提取頁面無法辨認欄位，只能顯示不提取。');
+    else info+='｜沒有提取頁面';
+    sc.scn.base=scenMaps(scB,sc.base);if(sc.wd)sc.scn.wd=scenMaps(scW,sc.wd);
+    const sn=o=>(o.p?'悲觀 ':'')+(o.o?'樂觀':'');
+    if(sn(sc.scn.base)||sn(sc.scn.wd))info+=`｜情景：不提取〔${sn(sc.scn.base)||'無'}〕提取〔${sn(sc.scn.wd)||'無'}〕`;
+    dg.push(info);
+    return{sc,warn:warn.join(' '),dg,pages};
+  }
+  async function handle(files){
+    const st=$('status');st.className='status';st.textContent='讀取中，請稍候…';
+    $('xlBox').classList.add('hide');
+    const msgs=[],dgs=[];let added=false,bad=false,failMap=false;
+    for(const f of files){
+      try{const r=await parseFile(f);schemes.push(r.sc);if(r.warn)msgs.push('⚠️ '+r.sc.name+'：'+r.warn);dgs.push(...r.dg);added=true;pend={name:r.sc.name,pages:r.pages,G:groups(r.pages)};failMap=false;}
+      catch(e){bad=true;msgs.push('❌ '+f.name+'：'+(e.msg||e.message||e));if(e.dg)dgs.push(...e.dg);
+        if(e.pages){pend={name:f.name.replace(/\.pdf$/i,''),pages:e.pages,G:groups(e.pages)};failMap=true;}}
+    }
+    $('diag').textContent=dgs.join('\n')||'—';
+    st.textContent=msgs.join('\n');st.className='status'+(bad?' err':'')+(msgs.length?'':' hide');
+    if(added){ai=schemes.length-1;mode='base';sel=20;}
+    $('mpOpen').classList.toggle('hide',!(pend&&pend.G.length));
+    render();
+    if(failMap&&pend.G.length)openMap('base');
+  }
+
+  /* ---------- 手動對應欄位 ---------- */
+  const ROLES=[['','— 略過 —'],['y','保單年度'],['age','年齡'],['prem','已繳保費（累計）'],['gcv','保證金額'],['sv','退保總額'],['db','身故賠償額'],['w','當年提取'],['cumW','累計提取']];
+  function guess(g){
+    const C=cols(g.rows),mp=C.map(()=>''),yi=yearCol(C,false);
+    if(yi!==undefined){mp[yi]='y';const a=ageCol(C,yi);if(a!==undefined)mp[a]='age';const sm=findSum(C,[yi,a]);if(sm)mp[sm.t]='sv';}
+    return mp;
+  }
+  function openMap(type){
+    if(!pend||!pend.G.length)return;
+    $('mapSec').classList.remove('hide');$('mpMsg').textContent='';
+    $('mpG').innerHTML=pend.G.map((g,i)=>`<option value="${i}">第 ${g.p1}${g.p2>g.p1?'–'+g.p2:''} 頁｜${g.n} 欄 × ${g.rows.length} 行</option>`).join('');
+    if(type)$('mpT').value=type;
+    drawMap();$('mapSec').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function drawMap(){
+    const g=pend.G[+$('mpG').value];if(!g.map)g.map=guess(g);
+    const L=g.rows.length-1,pk=[...new Set([0,1,2,Math.floor(L/2),L-1,L].filter(i=>i>=0&&i<=L))].sort((a,b)=>a-b);
+    $('mpTb').innerHTML='<thead><tr>'+g.map.map((m,i)=>`<th><select data-c="${i}">${ROLES.map(r=>`<option value="${r[0]}"${r[0]===m?' selected':''}>${r[1]}</option>`).join('')}</select></th>`).join('')+'</tr></thead><tbody>'+
+      pk.map((i,k)=>(k&&i-pk[k-1]>1?`<tr><td colspan="${g.n}" style="text-align:center">⋯</td></tr>`:'')+'<tr>'+g.rows[i].map(v=>`<td>${v.toLocaleString('en-US')}</td>`).join('')+'</tr>').join('')+'</tbody>';
+  }
+  function applyMap(){
+    const g=pend.G[+$('mpG').value],type=$('mpT').value,ix=k=>g.map.indexOf(k),err=t=>{$('mpMsg').textContent=t;};
+    const iy=ix('y'),ia=ix('age'),ip=ix('prem'),ig=ix('gcv'),is=ix('sv'),id=ix('db'),iw=ix('w'),ic=ix('cumW');
+    for(const r of ROLES)if(r[0]&&g.map.filter(m=>m===r[0]).length>1)return err('「'+r[1]+'」被選了多於一次。');
+    if(iy<0||is<0)return err('請最少指定「保單年度」及「退保總額」。');
+    if(!incCol(g.rows.map(r=>r[iy])))return err('所選的「保單年度」欄並非遞增的整數，請檢查。');
+    if(type==='base'){
+      if(ip<0)return err('不提取表格需要指定「已繳保費（累計）」。');
+      const R=g.rows.map(r=>({y:r[iy],age:ia>=0?r[ia]:r[iy],prem:r[ip],gcv:ig>=0?r[ig]:null,sv:r[is],db:id>=0?r[id]:null,w:0,cumW:0}));
+      schemes.push(newScheme(pend.name,R,ig>=0));ai=schemes.length-1;mode='base';sel=20;
+      $('status').className='status';$('status').textContent='✅ 已按手動對應建立方案，請與建議書核對數字。';
+      $('mpT').value='wd';err('');toast('已建立方案；如有提取表格，可再選另一個表格並設為「提取」');
+    }else{
+      if(!schemes.length)return err('請先建立「不提取」方案。');
+      if(iw<0&&ic<0)return err('提取表格需要指定「當年提取」或「累計提取」。');
+      let cum=0;
+      const R=g.rows.map(r=>{const w=iw>=0?r[iw]:r[ic]-cum;cum+=w;return{y:r[iy],age:ia>=0?r[ia]:r[iy],w,cumW:cum,sv:r[is],gcv:ig>=0?r[ig]:null,db:id>=0?r[id]:null};});
+      attachWd(S(),R);S().scn.wd={};mode='wd';err('');toast('已把提取表格加到「'+S().name+'」');
+    }
+    $('xlBox').classList.add('hide');
+    render();
+  }
+
+  /* ---------- 複製 ---------- */
+  function cellTxt(td){
+    const c=td.cloneNode(true);
+    c.querySelectorAll('br').forEach(b=>b.replaceWith(' '));
+    c.querySelectorAll('small').forEach(s=>s.replaceWith(' ('+s.textContent+')'));
+    return c.textContent.replace(/\s+/g,' ').trim();
+  }
+  /* 分組標題行（tr.g）有合併欄，複製時略過 */
+  const grid=tb=>[...tb.rows].filter(tr=>!tr.classList.contains('g')).map(tr=>[...tr.cells].map(cellTxt));
+  function clip(t,h){
+    let p;
+    try{
+      if(h&&navigator.clipboard&&window.ClipboardItem)p=navigator.clipboard.write([new ClipboardItem({'text/plain':new Blob([t],{type:'text/plain'}),'text/html':new Blob([h],{type:'text/html'})})]);
+      else p=navigator.clipboard.writeText(t);
+    }catch(e){p=Promise.reject(e);}
+    p.catch(()=>navigator.clipboard.writeText(t)).then(()=>toast('✓ 已複製')).catch(()=>prompt('請手動複製：',t));
+  }
+  function copyOut(title,blocks,extra){
+    let t=title+'\n',h=`<p><b>${esc(title)}</b></p>`;
+    blocks.forEach(b=>{
+      if(b.h){t+='\n'+b.h+'\n';h+=`<p><b>${esc(b.h)}</b></p>`;}
+      t+=b.g.map(r=>r.join('\t')).join('\n')+'\n';
+      h+='<table border="1" cellpadding="4" style="border-collapse:collapse">'+b.g.map((r,i)=>'<tr>'+r.map(c=>i?`<td>${esc(c)}</td>`:`<th>${esc(c)}</th>`).join('')+'</tr>').join('')+'</table>';
+    });
+    const n='*'+(extra||'')+DISC;t+='\n'+n;h+=`<p>${esc(n)}</p>`;
+    clip(t,h);
+  }
+
+  /* ---------- 顯示 ---------- */
+  const rows=()=>mode==='wd'&&S().wd?S().wd:S().base;
+  const isWd=()=>mode==='wd'&&!!S().wd;
+  const plist=s=>{const a=s.split(/[,，、\s]+/).map(Number).filter(v=>Number.isInteger(v)&&v>0);return[...new Set(a)].sort((x,y)=>x-y);};
+  /* 某事項在目前方案／模式下是否有數據 */
+  const itOk=(it,rs,wd)=>(!it.wd||wd)&&((it.k!=='gcv'&&it.k!=='ng')||rs.some(r=>r.gcv!=null))&&(it.k!=='db'||rs.some(r=>r.db!=null));
+  /* 重點年度：不提取（base）與提取（wd）各自獨立；超出建議書的年度改為顯示最後一個保單年度 */
+  function ms(k){
+    k=k||(isWd()?'wd':'base');
+    const a=plist($(k==='wd'?'msW':'msB').value);if(!schemes.length)return a;
+    const rs=k==='wd'&&S().wd?S().wd:S().base,mx=rs[rs.length-1].y,o=a.filter(y=>y<=mx);
+    if(a.some(y=>y>mx)&&!o.includes(mx))o.push(mx);
+    return o;
+  }
+  /* 數字卡：每張卡第 4 項為所屬事項，只顯示已選的事項 */
+  function tiles(r){
+    const cu=S().cur?' '+S().cur:'',T=[],wd=isWd();
+    T.push(['已繳總保費',fmt(r.prem)+cu,0,'prem']);
+    if(wd){
+      T.push(['當年提取',fmt(r.w)+cu,0,'w'],['累計已提取',fmt(r.cumW)+cu,1,'cumW'],['提取後退保金額',fmt(r.sv)+cu,1,'sv'],['預期收益',fmt(r.total)+cu,1,'total']);
+      if(r.db!=null)T.push(['提取後身故賠償額',fmt(r.db)+cu,0,'db']);
+      T.push(['每年提取 ÷ 已繳保費',pct(r.prem?r.w/r.prem:null),0,'w'],['累計提取 ÷ 已繳保費',mul(r.prem?r.cumW/r.prem:null),0,'cumW']);
+    }else{
+      T.push(['退保發還金額',fmt(r.sv)+cu,1,'sv'],['預期收益',fmt(r.total)+cu,1,'total']);if(r.db!=null)T.push(['身故賠償額',fmt(r.db)+cu,0,'db']);
+    }
+    if(r.gcv!=null)T.push(['其中保證金額',fmt(r.gcv)+cu,0,'gcv'],['其中非保證金額',fmt(r.ng)+cu,0,'ng']);
+    T.push(['回報倍數',mul(r.mult),0,'mult'],['SI 單利',pct(r.simple),0,'simple'],['IRR 複利',pct(r.irr),0,'irr']);
+    $('tiles').innerHTML=T.filter(t=>showK.has(t[3])).map(t=>`<div class="tile${t[2]?' hi':''}"><small>${t[0]}</small><b>${t[1]}</b></div>`).join('');
+    let c='第 '+r.y+' 年\n';
+    c+=wd?`預期收益 = 提取後退保金額 ${fmt(r.sv)} + 累計提取 ${fmt(r.cumW)} − 已繳保費 ${fmt(r.prem)} = ${fmt(r.total)}\n`:`預期收益 = 退保發還金額 ${fmt(r.sv)} − 已繳保費 ${fmt(r.prem)} = ${fmt(r.total)}\n`;
+    c+=`回報倍數 = 預期收益 ${fmt(r.total)} ÷ 已繳保費 ${fmt(r.prem)} = ${mul(r.mult)}\n`;
+    c+=`平均持有年期 = 平均收款時間 ${yrs(r.tIn)} − 平均繳費時間 ${yrs(r.tPay)} = ${yrs(r.dur)}\n`;
+    c+=`單利 = 回報倍數 ÷ 平均持有年期 = ${pct(r.simple)}\n`;
+    c+=`IRR = ${pct(r.irr)}（保費於年初繳付${wd?'，每年提取當作年初收取':''}，第 ${r.y} 年終退保）`;
+    $('calc').textContent=c;
+  }
+  /* 回報分析表的欄位；g = 分組（a 基本資料／d 提取安排／b 保單價值／c 回報分析）；只包含已選的事項 */
+  const GN={a:'基本資料',d:'提取安排',b:'保單價值',c:'回報分析'};
+  function detCols(){
+    const rs=rows(),wd=isWd(),on=k=>showK.has(k),hasG=rs.some(r=>r.gcv!=null);
+    const C=[{h:'保單年度',v:r=>'第 '+r.y+' 年',g:'a'},{h:'年齡',v:r=>r.age+' 歲',g:'a'}];
+    if(on('prem'))C.push({h:'已繳保費',v:r=>fmt(r.prem),g:'a'});
+    if(wd&&on('w'))C.push({h:'當年提取',v:r=>r.w>0?fmt(r.w):'—',g:'d'});
+    if(wd&&on('cumW'))C.push({h:'累計提取',v:r=>fmt(r.cumW),g:'d'});
+    if(on('gcv')&&hasG)C.push({h:'保證金額',v:r=>fmt(r.gcv),c:'cg',g:'b'});
+    if(on('ng')&&hasG)C.push({h:'非保證金額',v:r=>fmt(r.ng),c:'cn',g:'b'});
+    if(on('sv'))C.push({h:wd?'提取後<br>退保金額（總額）':'退保發還金額<br>（總額）',v:r=>fmt(r.sv),c:'ct',g:'b'});
+    if(on('db')&&rs.some(r=>r.db!=null))C.push({h:wd?'提取後<br>身故賠償額':'身故賠償額',v:r=>fmt(r.db),g:'b'});
+    if(on('total'))C.push({h:'預期收益',v:r=>fmt(r.total),c:'cr',g:'c'});
+    if(on('mult'))C.push({h:'回報倍數',v:r=>mul(r.mult),c:'cr',g:'c'});
+    if(on('simple'))C.push({h:'單利',v:r=>pct(r.simple),c:'cr',g:'c'});
+    if(on('irr'))C.push({h:'IRR 複利',v:r=>pct(r.irr),c:'cr',g:'c'});
+    return C;
+  }
+  /* 回報分析表：一張表，可切換「重點年度／全部年度」 */
+  function table(){
+    const rs=rows(),wd=isWd(),C=detCols(),M=ms(),all=view==='all';
+    $('itK').innerHTML=ITEMS.filter(it=>itOk(it,rs,wd)).map(it=>`<button data-k="${it.k}" class="${showK.has(it.k)?'on':''}">${showK.has(it.k)?'✓ ':''}${it.n}</button>`).join('')+'<button data-k="*">全選</button>';
+    $('msRB').classList.toggle('act',!wd);$('msRW').classList.toggle('act',wd);$('msRW').classList.toggle('hide',!S().wd);
+    [...$('vw').children].forEach(b=>b.classList.toggle('on',b.dataset.v===view));
+    let g='';
+    for(let i=0;i<C.length;){let j=i;while(j+1<C.length&&C[j+1].g===C[i].g)j++;g+=`<th class="g${C[i].g}" colspan="${j-i+1}">${GN[C[i].g]}</th>`;i=j+1;}
+    $('tb').querySelector('thead').innerHTML='<tr class="g">'+g+'</tr><tr>'+C.map(c=>`<th class="l${c.g}">${c.h}</th>`).join('')+'</tr>';
+    $('tb').querySelector('tbody').innerHTML=rs.filter(r=>all||M.includes(r.y)).map(r=>
+      `<tr class="pick${r.y===sel?' cur':''}${all&&M.includes(r.y)?' key':''}" data-y="${r.y}">${C.map(c=>`<td class="${c.c||''}">${c.v(r)}</td>`).join('')}</tr>`).join('')
+      ||`<tr><td colspan="${C.length}" style="text-align:center">請在下方「設定重點年度」輸入年度，或切換到「全部年度」。</td></tr>`;
+  }
+
+  /* ---------- 提取用途規劃摘要 ---------- */
+  const defUse=a=>a<=22?'教育金':a<=27?'創業':a<=32?'結婚':a<=59?'現金流':'退休金';
+  function autoSegs(sc){
+    const W=sc.wd.filter(r=>r.w>0);
+    const build=eq=>{const g=[];W.forEach(r=>{const L=g[g.length-1];if(L&&r.y===L.y2+1&&(!eq||r.w===L.w))L.y2=r.y;else g.push({y1:r.y,y2:r.y,w:r.w,use:defUse(r.age),note:''});});return g;};
+    let g=build(true);if(g.length>12)g=build(false);
+    sc.segs=g.map(s=>({y1:s.y1,y2:s.y2,use:s.use,note:''}));
+  }
+  /* bal：該時段最後一次提取的保單年度終結時之提取後退保金額；by：該保單年度 */
+  function sstat(sc,s){
+    const rs=sc.wd.filter(r=>r.y>=s.y1&&r.y<=s.y2&&r.w>0),t=sum(rs.map(r=>r.w));
+    if(!rs.length)return{n:0,t:0,avg:0,a1:0,a2:0,uni:true,bal:null,by:null};
+    const last=rs[rs.length-1];
+    return{n:rs.length,t,avg:t/rs.length,a1:rs[0].age,a2:last.age,uni:rs.every(r=>r.w===rs[0].w),bal:last.sv,by:last.y};
+  }
+  const aLab=st=>st.a1===st.a2?st.a1+' 歲':st.a1+'–'+st.a2+' 歲';
+  const yLab=s=>s.y1===s.y2?'第 '+s.y1+' 年':'第 '+s.y1+'–'+s.y2+' 年';
+  function foot(sc){const cu=sc.cur?' '+sc.cur:'',last=sc.wd[sc.wd.length-1];return`合共已提取 ${fmt(last.cumW)}${cu}；${last.age} 歲時保單餘額為 ${fmt(last.sv)}${cu}。`;}
+  function renderSegs(){
+    const sc=S();$('planSec').classList.toggle('hide',!sc.wd);if(!sc.wd)return;
+    const cu=sc.cur?' '+sc.cur:'';
+    $('pt').querySelector('tbody').innerHTML=sc.segs.map((s,i)=>{const st=sstat(sc,s);
+      return`<tr><td>${aLab(st)}</td><td>${yLab(s)}</td><td>${st.uni?'':'平均 '}${fmt(st.avg)}${cu}</td><td>${st.n} 年</td><td><b>${fmt(st.t)}${cu}</b></td>
+      <td><b>${fmt(st.bal)}${st.bal!=null?cu:''}</b>${st.by!=null?`<br><small>第 ${st.by} 年終</small>`:''}</td>
+      <td><select data-i="${i}" data-k="use">${Object.keys(USES).map(u=>`<option${u===s.use?' selected':''} value="${u}">${USES[u]} ${u}</option>`).join('')}</select></td>
+      <td><input type="text" data-i="${i}" data-k="note" value="${esc(s.note)}" placeholder="例如：海外升學"></td>
+      <td>${st.n>1?`<button class="btn" data-sp="${i}">分拆</button>`:''}</td></tr>`;}).join('')||'<tr><td colspan="9">建議書沒有提取金額</td></tr>';
+    $('pNote').textContent=foot(sc);
+  }
+  function splitSeg(i){
+    const sc=S(),s=sc.segs[i],st=sstat(sc,s);
+    const v=prompt(`由幾歲開始分拆為新時段？（可輸入 ${st.a1+1} 至 ${st.a2}）`);if(v==null||v==='')return;
+    const a=+v,row=sc.wd.find(r=>r.age===a&&r.y>s.y1&&r.y<=s.y2);
+    if(!row){alert('歲數不在此時段範圍內。');return;}
+    sc.segs.splice(i+1,0,{y1:row.y,y2:s.y2,use:defUse(a),note:''});s.y2=row.y-1;render();
+  }
+  function planText(){
+    const sc=S(),cu=sc.cur?' '+sc.cur:'',last=sc.wd[sc.wd.length-1];
+    let t=(sc.name||'儲蓄計劃')+'｜提取用途規劃摘要\n已繳總保費：'+fmt(last.prem)+cu+'\n\n';
+    sc.segs.forEach(s=>{const st=sstat(sc,s);
+      t+=`${USES[s.use]||''} ${aLab(st)}（${yLab(s)}）【${s.use}】${s.note?'（'+s.note+'）':''}\n　${st.uni?'每年提取':'每年平均提取'} ${fmt(st.avg)}${cu} × ${st.n} 年 ＝ ${fmt(st.t)}${cu}\n`;
+      if(st.bal!=null)t+=`　提取後帳戶金額（第 ${st.by} 年終）：${fmt(st.bal)}${cu}\n`;});
+    t+='\n'+foot(sc)+'\n*以上包含非保證金額，按建議書現時假設計算，實際金額可能較高或較低。';
+    return t;
+  }
+
+  /* ---------- 方案對比（每個方案一欄；可選「每個數字一張表」或「每個時間點一張表」） ---------- */
+  function variants(all){
+    const v=[];let n=0;
+    schemes.forEach((s,i)=>{const nm=(i+1)+'. '+(s.name||'方案');
+      [['b','不提取',s.base],['w','提取',s.wd]].forEach(q=>{if(!q[2])return;const c=PAL[n++%PAL.length];
+        if(all||s.cmp[q[0]])v.push({si:i,k:q[0],l:nm,t:q[1],rows:q[2],c});});});
+    return v;
+  }
+  const byAge=()=>cp.by==='a';
+  /* 時間點：自訂，或所選方案涵蓋範圍內每 5 年／每 10 年／每一年 */
+  const cpPts=()=>{
+    if(cp.rg==='pick')return plist($('cpp').value);
+    const A2=byAge(),st=cp.rg==='all'?1:+cp.rg;let lo=Infinity,hi=-Infinity;
+    variants().forEach(v=>v.rows.forEach(r=>{const p=A2?r.age:r.y;if(p<lo)lo=p;if(p>hi)hi=p;}));
+    const o=[];if(isFinite(lo))for(let p=lo;p<=hi;p++)if(p%st===0)o.push(p);
+    return o;
+  };
+  const cpRgLab=()=>cp.rg==='pick'?'':cp.rg==='all'?'每一年':'每 '+cp.rg+' 年';
+  const cpRow=(v,p)=>v.rows.find(r=>byAge()?r.age===p:r.y===p);
+  const val=(r,k)=>r&&r[k]!=null&&isFinite(r[k])?r[k]:null;
+  const cpMets=()=>MET.filter(m=>cp.K.includes(m.k));
+  const cpLab=p=>byAge()?p+' 歲':'第 '+p+' 年';
+  const cpSub=r=>byAge()?'第 '+r.y+' 年':r.age+' 歲';
+  /* 一行內各方案的格（最高值加 ★），只有兩個方案時最後加「相差」；sub：在每格下方顯示該方案的年齡／保單年度 */
+  function cmpCells(m,rs,sub){
+    const xs=rs.map(r=>val(r,m.k)),ok=xs.filter(x=>x!=null);
+    const best=ok.length>1&&!m.nb&&Math.max(...ok)>Math.min(...ok)?Math.max(...ok):null;
+    let h=rs.map((r,i)=>{const b=best!=null&&xs[i]===best;
+      return`<td class="${b?'best':''}">${b?'★ ':''}${r?m.f(xs[i]):'—'}${sub&&r?'<br><small>'+cpSub(r)+'</small>':''}</td>`;}).join('');
+    if(rs.length===2){const d=xs[0]!=null&&xs[1]!=null?Math.abs(xs[0]-xs[1]):null;h+=`<td class="df">${d==null?'—':d===0?'相同':m.f(d)}</td>`;}
+    return h;
+  }
+  /* 文字結論：最後一個時間點，每個數字哪個方案最高 */
+  function cmpSum(K,V,q){
+    const L=K.filter(m=>!m.nb).map(m=>{
+      const xs=q.rs.map(r=>val(r,m.k)),ok=xs.filter(x=>x!=null);
+      if(ok.length<2||Math.max(...ok)===Math.min(...ok))return'';
+      const bi=xs.indexOf(Math.max(...ok));
+      return`<li>${m.n}最高：<b style="color:${V[bi].c}">${esc(V[bi].l)}｜${V[bi].t}</b>（${m.f(xs[bi])}）</li>`;}).join('');
+    return L?`<div class="csum"><b>📌 ${cpLab(q.p)}的比較結果</b><ul>${L}</ul></div>`:'';
+  }
+  function cmpHtml(K,V,P){
+    const pts=P.map(p=>({p,rs:V.map(v=>cpRow(v,p))})).filter(q=>q.rs.some(r=>r));
+    if(!pts.length)return'';
+    const two=V.length===2;
+    const sh=V.map(v=>`<th class="sh" style="border-top:6px solid ${v.c}">${esc(v.l)}<br><span class="ty">${v.t}</span></th>`).join('')+(two?'<th>相差</th>':'');
+    /* 各方案在同一時間點的年齡（或保單年度）相同時，只在標題顯示一次 */
+    const subOf=q=>{const s=[...new Set(q.rs.filter(r=>r).map(cpSub))];return s.length===1?s[0]:null;};
+    let h=cmpSum(K,V,pts[pts.length-1]);
+    if(cp.ly==='m'){
+      K.forEach(m=>{
+        h+=`<div class="cph">${m.n}</div><div class="tw"><table class="cmp"><thead><tr><th>${byAge()?'年齡':'保單年度'}</th>${sh}</tr></thead><tbody>`+
+          pts.map(q=>{const s=subOf(q);return`<tr><td>${cpLab(q.p)}${s?'<br><small>'+s+'</small>':''}</td>${cmpCells(m,q.rs,!s)}</tr>`;}).join('')+'</tbody></table></div>';
+      });
+    }else{
+      pts.forEach(q=>{
+        const s=subOf(q);
+        h+=`<div class="cph">${cpLab(q.p)}${s?'<small>'+s+'</small>':''}</div><div class="tw"><table class="cmp"><thead><tr><th>項目</th>${sh}</tr></thead><tbody>`+
+          (s?'':`<tr><td>${byAge()?'保單年度':'年齡'}</td>${q.rs.map(r=>`<td>${r?cpSub(r):'—'}</td>`).join('')}${two?'<td class="df">—</td>':''}</tr>`)+
+          K.map(m=>`<tr><td>${m.n}</td>${cmpCells(m,q.rs,false)}</tr>`).join('')+'</tbody></table></div>';
+      });
+    }
+    return h;
+  }
+  function renderCmp(){
+    const A=variants(true);$('cmpSec').classList.toggle('hide',A.length<2);if(A.length<2)return;
+    $('cpv').innerHTML=A.map(v=>{const on=schemes[v.si].cmp[v.k];
+      return`<button data-si="${v.si}" data-k="${v.k}" style="${on?`background:${v.c};border-color:${v.c};color:#fff`:`border-color:${v.c};color:${v.c}`}">${on?'✓ ':''}${esc(v.l)}｜${v.t}</button>`;}).join('');
+    $('cpk').innerHTML=MET.map(m=>`<button data-k="${m.k}" class="${cp.K.includes(m.k)?'on':''}">${cp.K.includes(m.k)?'✓ ':''}${m.n}</button>`).join('');
+    [...$('cpb').children].forEach(b=>b.classList.toggle('on',b.dataset.v===cp.by));
+    [...$('cpl').children].forEach(b=>b.classList.toggle('on',b.dataset.v===cp.ly));
+    [...$('cpr').children].forEach(b=>{b.classList.toggle('on',b.dataset.v===cp.rg);if(b.dataset.v==='5'||b.dataset.v==='10')b.textContent='每 '+b.dataset.v+(byAge()?' 歲':' 年');if(b.dataset.v==='all')b.textContent=byAge()?'每一歲':'每一年';});
+    $('cpp').classList.toggle('hide',cp.rg!=='pick');$('cpp').placeholder=byAge()?'輸入歲數，例如 40,50,60,65':'輸入保單年度，例如 10,20,30';
+    const V=variants(),P=cpPts(),K=cpMets(),out=$('cpOut');
+    if(V.length<2){out.innerHTML='<div class="note">請在第一步選擇最少兩個方案。</div>';return;}
+    if(!K.length){out.innerHTML='<div class="note">請在第二步選擇最少一個要比較的數字。</div>';return;}
+    out.innerHTML=cmpHtml(K,V,P)||'<div class="note">請在第三步輸入要比較的'+(byAge()?'歲數':'保單年度')+'。</div>';
+  }
+
+  /* ---------- 悲觀／樂觀情景 ---------- */
+  /* 建議書數字：顯示建議書情景頁面有列出的所有年份；自行估算：使用重點年度 */
+  function scnData(){
+    const sc=S(),wd=isWd(),pdf=sc.scn[wd?'wd':'base']||{},avail=!!(pdf.p||pdf.o);
+    let src=scSrc||(avail?'pdf':'est');if(src==='pdf'&&!avail)src='est';
+    const fp=(+$('scP').value||0)/100,fo=(+$('scO').value||0)/100;
+    const get=(r,w)=>src==='pdf'?(pdf[w]&&pdf[w][r.y]!=null?pdf[w][r.y]:null):(r.gcv==null?null:r.gcv+r.ng*(w==='p'?fp:fo));
+    const rs=rows(),M=ms();
+    const Y=src==='pdf'?rs.filter(r=>get(r,'p')!=null||get(r,'o')!=null):rs.filter(r=>M.includes(r.y));
+    const cz=(r,w)=>{const v=get(r,w);return v==null?null:calcAt(sc,r,wd,v);};
+    return{src,avail,canEst:rs.some(r=>r.gcv!=null),rows:Y.map(r=>({r,p:cz(r,'p'),o:cz(r,'o')}))};
+  }
+  const SCH=['保單年度','年齡','悲觀｜退保金額','悲觀｜預期收益','悲觀｜IRR','現時假設｜退保金額','現時假設｜預期收益','現時假設｜IRR','樂觀｜退保金額','樂觀｜預期收益','樂觀｜IRR'];
+  const scnNote=d=>d.src==='pdf'?'數字來自建議書的悲觀／樂觀情景頁面（自動讀取，請與建議書核對）；顯示建議書情景頁面有列出的所有年份。':'自行估算（按重點年度顯示）：情景退保金額 ＝ 保證金額 ＋ 非保證金額 × 所設百分比，只屬粗略示意，並非保險公司提供的數字'+(isWd()?'；提取情況下假設提取金額不變，實際上悲觀情景可能無法維持相同提取。':'。');
+  function renderScn(){
+    $('scSec').classList.toggle('hide',!showSc);$('scT').textContent=showSc?'－ 隱藏悲觀／樂觀情景':'＋ 進階功能：顯示悲觀／樂觀情景';
+    if(!showSc)return;
+    const d=scnData();
+    [...$('scS').children].forEach(b=>{b.classList.toggle('on',b.dataset.v===d.src);b.disabled=b.dataset.v==='pdf'&&!d.avail;b.title=b.disabled?'未能從建議書讀取到此模式的情景頁面':'';});
+    $('scEst').classList.toggle('hide',d.src!=='est');
+    const hc=i=>i<2?'':i<5?'hp':i<8?'hn':'ho';
+    $('sct').querySelector('thead').innerHTML='<tr>'+SCH.map((h,i)=>`<th class="${hc(i)}">${h.replace('｜','<br>')}</th>`).join('')+'</tr>';
+    const c3=(x,c)=>x?`<td class="${c}">${fmt(x.sv)}</td><td class="${c}">${fmt(x.total)}</td><td class="${c}">${pct(x.irr)}</td>`:'<td>—</td><td>—</td><td>—</td>';
+    $('sct').querySelector('tbody').innerHTML=d.rows.map(q=>`<tr><td>第 ${q.r.y} 年</td><td>${q.r.age} 歲</td>${c3(q.p,'cp')}${c3(q.r,'ct')}${c3(q.o,'co')}</tr>`).join('')
+      ||`<tr><td colspan="11" style="text-align:center">${d.src==='est'&&!d.canEst?'此方案沒有保證／非保證金額的分項，無法估算。':'沒有可顯示的年度，請檢查重點年度。'}</td></tr>`;
+    $('scNote').textContent=scnNote(d)+(d.avail?'':'　（未能從建議書讀取到此模式的悲觀／樂觀情景頁面，故只提供自行估算。）');
+  }
+
+  function render(){
+    const has=schemes.length>0;
+    $('app').classList.toggle('hide',!has);$('schBox').classList.toggle('hide',!has);
+    if(!has)return;
+    if(ai>=schemes.length)ai=schemes.length-1;
+    const sc=S();if(!sc.wd)mode='base';
+    const schBtns=schemes.map((s,i)=>`<button data-s="${i}" class="${i===ai?'on':''}">${i+1}. ${esc(s.name)}</button>`).join('');
+    $('sch').innerHTML=schBtns;
+    /* 置頂的方案切換列（多於一個方案時顯示）及各部分標題旁的方案名稱 */
+    const multi=schemes.length>1;
+    $('schBar').classList.toggle('hide',!multi);$('sch2').innerHTML=schBtns;
+    const on2=$('sch2').querySelector('button.on');if(on2&&on2.scrollIntoView)on2.scrollIntoView({block:'nearest',inline:'nearest'});
+    document.querySelectorAll('h2 .sn').forEach(e=>e.textContent=multi?(ai+1)+'. '+(sc.name||'方案'):'');
+    if(document.activeElement!==$('name'))$('name').value=sc.name;
+    const rs=rows();let i=rs.findIndex(r=>r.y>=sel);if(i<0)i=rs.length-1;sel=rs[i].y;
+    $('mBase').classList.toggle('on',mode==='base');$('mWd').classList.toggle('on',mode==='wd');$('mWd').disabled=!sc.wd;
+    $('sl').max=rs.length-1;$('sl').value=i;
+    const r=rs[i];$('yr').textContent='保單年度 '+r.y;$('ag').textContent=r.age+' 歲';
+    tiles(r);renderSegs();table();renderCmp();renderScn();
+  }
+
+  /* ---------- Excel ---------- */
+  const X={navy:'FF0F172A',gold:'FFB45309',teal:'FF0F766E',blue:'FF1D4ED8',soft:'FFFFFBEB',key:'FFFEF3C7',zeb:'FFF8FAFC',ln:'FFD5DCE6',wh:'FFFFFFFF',mut:'FF64748B',rose:'FF9F1239'};
+  const GR={A:{n:'基本資料',d:X.navy,l:'FFE2E8F0'},D:{n:'提取安排',d:X.blue,l:'FFDBEAFE'},B:{n:'保單價值',d:X.teal,l:'FFCCFBF1'},C:{n:'回報分析',d:X.gold,l:'FFFEF3C7'}};
+  /* 摘要提取表：每個提取時段的底色 */
+  const BAND=['FFFDE68A','FFBAE6FD','FFE9D5FF','FFBBF7D0','FFFECDD3','FFFED7AA'];
+  const FN='Arial';
+  const fill=c=>({type:'pattern',pattern:'solid',fgColor:{argb:c}});
+  const bd={style:'thin',color:{argb:X.ln}},BD={top:bd,left:bd,bottom:bd,right:bd};
+  const wbd={style:'medium',color:{argb:X.wh}},WB={left:wbd,right:wbd};
+  const NF={n:'#,##0;[Red]-#,##0',p:'0.00%;[Red]-0.00%',x:'0.00"倍";[Red]-0.00"倍"'};
+  function xInit(ws,title,sub,ncol,w,tab){
+    for(let i=1;i<=ncol;i++)ws.getColumn(i).width=w||15;
+    ws.mergeCells(1,1,1,ncol);let c=ws.getCell(1,1);c.value=title;c.font={name:FN,bold:true,size:18,color:{argb:X.wh}};c.fill=fill(X.navy);c.alignment={vertical:'middle',indent:1};ws.getRow(1).height=38;
+    ws.mergeCells(2,1,2,ncol);c=ws.getCell(2,1);c.value=sub;c.font={name:FN,size:10,bold:true,color:{argb:X.wh}};c.fill=fill(X.gold);c.alignment={vertical:'middle',indent:1};ws.getRow(2).height=22;
+    ws.getRow(3).height=8;
+    ws.pageSetup={orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0,margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2}};
+    ws.headerFooter.oddFooter='&C第 &P 頁，共 &N 頁';
+    ws.properties.tabColor={argb:tab||X.navy};
+  }
+  function xCards(ws,r,cards,span){
+    cards.forEach((q,i)=>{const c1=i*span+1,c2=c1+span-1;
+      [0,1].forEach(d=>{if(c2>c1)ws.mergeCells(r+d,c1,r+d,c2);const c=ws.getCell(r+d,c1);c.value=q[d];c.fill=fill(X.soft);c.border=WB;c.alignment={horizontal:'center',vertical:'middle'};
+        c.font=d?{name:FN,bold:true,size:14,color:{argb:X.gold}}:{name:FN,size:9,color:{argb:X.mut}};if(d&&typeof q[1]==='number')c.numFmt='#,##0';});});
+    ws.getRow(r).height=20;ws.getRow(r+1).height=30;ws.getRow(r+2).height=10;return r+3;
+  }
+  function xCell(c,v,t,st){
+    const bad=v==null||(typeof v==='number'&&!isFinite(v));
+    c.value=bad?'—':v;c.border=BD;
+    if(NF[t]&&!bad&&typeof v==='number')c.numFmt=st.star?'"★ "'+NF[t].split(';')[0]:NF[t];
+    const al=bad||t==='c'?'center':t==='t'?'left':'right';
+    c.alignment={horizontal:al,vertical:'middle',wrapText:t==='t'};if(al!=='center')c.alignment.indent=1;
+    c.font={name:FN,size:11,bold:!!st.bold,color:{argb:st.color||X.navy}};
+    if(st.fill)c.fill=fill(st.fill);
+  }
+  /* cols：[標題, 格式, 分組]；o：{title, grp, hc, bc（每欄最高值陣列）, key, bold, hh, nohead（不畫標題行，用於接續上一段）} */
+  function xTable(ws,r,cols,data,o){
+    o=o||{};const n=cols.length;
+    if(o.title){ws.mergeCells(r,1,r,n);const c=ws.getCell(r,1);c.value=o.title;c.font={name:FN,bold:true,size:13,color:{argb:X.navy}};c.alignment={vertical:'middle'};c.border={bottom:{style:'medium',color:{argb:X.gold}}};ws.getRow(r).height=28;r++;}
+    if(o.grp){
+      let i=0;
+      while(i<n){let j=i;while(j+1<n&&cols[j+1][2]===cols[i][2])j++;if(j>i)ws.mergeCells(r,i+1,r,j+1);
+        const g=GR[cols[i][2]],c=ws.getCell(r,i+1);c.value=g.n;c.font={name:FN,bold:true,size:11,color:{argb:X.wh}};c.fill=fill(g.d);c.alignment={horizontal:'center',vertical:'middle'};c.border=WB;i=j+1;}
+      ws.getRow(r).height=22;r++;
+    }
+    const hr=r;
+    if(!o.nohead){
+      cols.forEach((q,i)=>{const c=ws.getCell(r,i+1),dark=o.hc&&o.hc[i]?o.hc[i]:o.grp?null:X.navy;
+        c.value=q[0];c.fill=fill(dark||GR[q[2]].l);c.font={name:FN,bold:true,size:10,color:{argb:dark?X.wh:X.navy}};c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.border=BD;});
+      ws.getRow(r).height=o.hh||34;r++;
+    }
+    data.forEach((d,k)=>{
+      const key=o.key&&o.key(d);
+      d.forEach((v,i)=>{const top=!!o.bc&&o.bc[i]!=null&&v===o.bc[i],ret=o.grp&&cols[i][2]==='C';
+        xCell(ws.getCell(r,i+1),v,cols[i][1],{bold:top||ret||key||(o.bold&&o.bold.includes(i)),color:top||ret?X.gold:null,fill:top||key?X.key:k%2?X.zeb:null,star:top});});
+      ws.getRow(r).height=22;r++;});
+    return{next:r+1,hr};
+  }
+  function xBar(ws,r,ncol,t){ws.mergeCells(r,1,r,ncol);const c=ws.getCell(r,1);c.value=t;c.font={name:FN,bold:true,size:12,color:{argb:X.navy}};c.fill=fill(X.key);c.alignment={vertical:'middle',indent:1,wrapText:true};ws.getRow(r).height=32;return r+2;}
+  function xNote(ws,r,ncol,t){ws.mergeCells(r,1,r,ncol);const c=ws.getCell(r,1);c.value=t;c.font={name:FN,size:9,italic:true,color:{argb:X.mut}};c.alignment={wrapText:true,vertical:'top'};ws.getRow(r).height=30;}
+  /* 摘要的提取表：基本資料｜提取安排｜保單價值｜回報分析（只包含匯出時所選的事項）。
+     先固定逐年列出首 10 個保單年度（「提取金額」顯示當年提取；屬於提取時段的年度用該時段的底色），
+     之後每個提取用途的時段一個色塊（只列第 11 年起的年度），「提取金額」合併成一格並標明用途；
+     每一行均附該年度的回報分析。
+     時段不多於 8 年逐年列出，較長的時段每 5 年（超過 25 年則每 10 年）列一行，並包括最後一年 */
+  function xWdSum(ws,r,sc,py){
+    const cu=sc.cur||'',FIRST=10;
+    /* [標題, 分組, 事項, 格式, 取值] */
+    const H=[['保單年度','A',null,'c',x=>x.y],['年齡','A',null,'c',x=>x.age],[py<=1?'整付保費':'年繳保費','A','prem','n',x=>sc.pf[x.y]||null],
+      ['提取金額','D','w','n',x=>x.w>0?x.w:null],['累計提取金額','D','cumW','n',x=>x.cumW>0?x.cumW:null],['提取後退保金額','B','sv','n',x=>x.sv],
+      ['預期收益','C','total','n',x=>x.total],['回報倍數','C','mult','x',x=>x.mult],['單利','C','simple','p',x=>x.simple],['IRR 複利','C','irr','p',x=>x.irr]].filter(q=>!q[2]||xp.K.has(q[2]));
+    const N=H.length,wc=H.findIndex(q=>q[2]==='w')+1; /* wc：「提取金額」欄的位置（0＝沒有選擇） */
+    const amt=v=>((v>=10000&&v%1000===0?(v/10000)+' 萬':fmt(v)+' ')+cu).trim();
+    const cell=(row,col,v,t,st,r2)=>{if(r2&&r2>row)ws.mergeCells(row,col,r2,col);
+      const c=ws.getCell(row,col);xCell(c,v,t,st);c.alignment={horizontal:'center',vertical:'middle',wrapText:true};return c;};
+    if(wc)ws.getColumn(wc).width=22; /* 「提取金額」欄要放「用途＋每年提取 × 年數」的文字 */
+    ws.mergeCells(r,1,r,N);let c=ws.getCell(r,1);c.value='提取｜首 '+FIRST+' 年及各提取用途時段的回報分析';c.font={name:FN,bold:true,size:13,color:{argb:X.navy}};c.alignment={vertical:'middle'};c.border={bottom:{style:'medium',color:{argb:X.gold}}};ws.getRow(r).height=28;r++;
+    /* 分組標題行 */
+    for(let i=0;i<N;){
+      let j=i;while(j+1<N&&H[j+1][1]===H[i][1])j++;
+      if(j>i)ws.mergeCells(r,i+1,r,j+1);
+      const g=GR[H[i][1]];c=ws.getCell(r,i+1);c.value=g.n;c.font={name:FN,bold:true,size:11,color:{argb:X.wh}};c.fill=fill(g.d);c.alignment={horizontal:'center',vertical:'middle'};c.border=WB;
+      i=j+1;
+    }
+    ws.getRow(r).height=22;r++;
+    /* 欄位標題行 */
+    H.forEach((q,i)=>{c=ws.getCell(r,i+1);
+      c.value=q[0];c.fill=fill(GR[q[1]].l);c.font={name:FN,bold:true,size:10,color:{argb:X.navy}};c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.border=BD;});
+    ws.getRow(r).height=30;r++;
+    /* own：true＝「提取金額」欄顯示當年提取（首 10 年）；false＝留待時段合併格填寫 */
+    const line=(x,f,own)=>{
+      H.forEach((q,i)=>{if(q[2]==='w'&&!own)return;
+        cell(r,i+1,q[4](x),q[3],q[1]==='C'?{fill:f,bold:true,color:X.gold}:{fill:f,bold:!!f});});
+      ws.getRow(r).height=24;r++;};
+    const band=i=>BAND[i%BAND.length];
+    /* 固定顯示首 10 個保單年度 */
+    sc.wd.filter(x=>x.y<=FIRST).forEach(x=>{
+      const i=x.w>0?sc.segs.findIndex(s=>x.y>=s.y1&&x.y<=s.y2):-1;
+      line(x,i>=0?band(i):null,true);
+    });
+    /* 各提取用途時段（第 11 年起） */
+    sc.segs.forEach((s,i)=>{
+      const rs=sc.wd.filter(x=>x.y>=s.y1&&x.y<=s.y2&&x.w>0&&x.y>FIRST),n=rs.length;if(!n)return;
+      const st=sstat(sc,s),step=n<=8?1:n<=25?5:10,y0=rs[0].y,pk=rs.filter((x,k)=>k===n-1||(x.y-y0)%step===0);
+      const f=band(i),r0=r;
+      pk.forEach(x=>line(x,f,false));
+      if(wc){
+        const txt=((USES[s.use]||'')+' '+s.use).trim()+'\n'+(st.n===1?'提取 '+amt(st.t):(st.uni?'每年提取':'每年平均提取')+'\n'+amt(Math.round(st.avg))+' × '+st.n+' 年');
+        cell(r0,wc,txt,'c',{fill:f,bold:true},r-1);
+        if(r-r0===1)ws.getRow(r0).height=52; /* 只有一行時加高，以容納用途及提取說明 */
+      }
+    });
+    return r+1;
+  }
+  /* 把目前方案 S() 的各個分頁寫入活頁簿；pfx：多方案匯出時的分頁名稱前綴（例如「2. 」）。
+     只匯出 xp.S 所選的部分；表格只包含 xp.K 所選的事項 */
+  function xScheme(wb,pfx){
+    const sc=S(),MB=ms('base'),MW=ms('wd'),cu=sc.cur||'',today=new Date().toLocaleDateString('zh-HK'),sub=(sc.name||'')+(cu?'｜貨幣：'+cu:'')+'｜製表日期：'+today;
+    const lastB=sc.base[sc.base.length-1],pv=Object.values(sc.pf),py=pv.length;
+    /* 繳費方式：整付，或「每年保費 × 年期」 */
+    const pay=py<=1?'整付':(pv.every(v=>Math.abs(v-pv[0])<1)?'':'平均 ')+fmt(lastB.prem/py)+' × '+py+' 年';
+    const has=k=>xp.S.has(k);
+    /* 欄位：[標題, 格式, 分組, 事項（null＝必定包含）, 取值] */
+    const pick=L=>L.filter(c=>!c[3]||xp.K.has(c[3])),dat=(C,rs)=>rs.map(x=>C.map(c=>c[4](x)));
+    const useAt=x=>{if(!(x.w>0))return'';const s=sc.segs.find(q=>x.y>=q.y1&&x.y<=q.y2);return s?(USES[s.use]||'')+' '+s.use:'';};
+    const PR=['已繳保費','n','A','prem',x=>x.prem];
+    const GV=[['保證金額','n','B','gcv',x=>x.gcv],['非保證金額','n','B','ng',x=>x.ng]];
+    const RC=[['預期收益','n','C','total',x=>x.total],['回報倍數','x','C','mult',x=>x.mult],['單利','p','C','simple',x=>x.simple],['IRR 複利','p','C','irr',x=>x.irr]];
+    const YA=[['保單年度','c','A',null,x=>x.y],['年齡','c','A',null,x=>x.age],PR];
+    const cB=pick([['保單年度','c','A',null,x=>'第 '+x.y+' 年'],['年齡','c','A',null,x=>x.age+' 歲'],PR].concat(GV,[['退保發還金額','n','B','sv',x=>x.sv]],RC));
+    const cBF=pick(YA.concat(GV,[['退保發還金額（總額）','n','B','sv',x=>x.sv],['身故賠償額','n','B','db',x=>x.db]],RC));
+    const cWF=pick(YA.concat([['當年提取','n','D','w',x=>x.w],['累計提取','n','D','cumW',x=>x.cumW],['用途','c','D',null,x=>useAt(x)]],GV,
+      [['提取後退保金額（總額）','n','B','sv',x=>x.sv],['提取後身故賠償額','n','B','db',x=>x.db]],RC));
+    /* 摘要 */
+    let ws=wb.addWorksheet(pfx+'摘要',{views:[{showGridLines:false}]});xInit(ws,'理財計劃建議書',sub,10,15,X.navy);
+    let r=xCards(ws,4,[['保單貨幣',cu||'—'],['投保年齡',(sc.base[0].age-sc.base[0].y)+' 歲'],['繳費方式',pay],['已繳總保費',lastB.prem],['提取方案合共提取',sc.wd?sc.wd[sc.wd.length-1].cumW:'—']],2),t;
+    if(has('b'))r=xTable(ws,r,cB,dat(cB,sc.base.filter(x=>MB.includes(x.y))),{title:'不提取｜重點年度回報（第 '+MB.join('、')+' 年）',grp:true}).next;
+    if(sc.wd&&has('w')){
+      r=xWdSum(ws,r,sc,py);
+      r=xBar(ws,r,10,foot(sc));
+      xNote(ws,r,10,'提取部分先逐年列出首 10 個保單年度，其後按提取用途的時段分色顯示，每行附該年度的回報分析（預期收益＝提取後退保金額＋累計提取－已繳保費）；較長的時段只列出部分年度（每 5 或 10 年及最後一年），完整每年數字見「提取每年情況」分頁。'+DISC);
+    }else xNote(ws,r,10,DISC);
+    /* 不提取每年情況 */
+    if(has('b')){
+      const n=cBF.length;
+      ws=wb.addWorksheet(pfx+'不提取每年情況');xInit(ws,'不提取｜每年情況',sub,n,15,X.teal);
+      t=xTable(ws,4,cBF,dat(cBF,sc.base),{grp:true,key:d=>MB.includes(d[0])});
+      ws.views=[{state:'frozen',xSplit:2,ySplit:t.hr,showGridLines:false}];ws.pageSetup.printTitlesRow=(t.hr-1)+':'+t.hr;xNote(ws,t.next,n,'金色底為「不提取」的重點年度。'+DISC);
+    }
+    /* 提取每年情況（上半部為提取用途規劃，下半部為每年情況） */
+    if(sc.wd&&(has('plan')||has('w'))){
+      const NC=Math.max(cWF.length,has('plan')?10:2);
+      ws=wb.addWorksheet(pfx+'提取每年情況');xInit(ws,has('plan')&&has('w')?'提取｜用途規劃及每年情況':has('plan')?'提取｜用途規劃':'提取｜每年情況',sub,NC,15,X.blue);
+      ws.getColumn(1).width=16;
+      r=4;
+      if(has('plan')){
+        t=xTable(ws,r,[['用途','t'],['年齡','c'],['保單年度','c'],['每年提取','n'],['提取年數','c'],['合共提取','n'],['提取後帳戶金額\n（時段最後年度終）','n'],['備註','t']],
+          sc.segs.map(s=>{const st=sstat(sc,s);return[(USES[s.use]||'')+' '+s.use,aLab(st),yLab(s),Math.round(st.avg),st.n+' 年',st.t,st.bal,s.note||''];}),{title:'提取用途規劃',bold:[0,5,6]});
+        if(NC>8)for(let k=0;k<=sc.segs.length;k++)ws.mergeCells(t.hr+k,8,t.hr+k,NC); /* 備註欄橫跨餘下各欄 */
+        r=xBar(ws,t.next,NC,foot(sc));
+      }
+      if(has('w')){
+        const U=sc.wd.map(useAt),uc=cWF.findIndex(c=>c[0]==='用途')+1;
+        t=xTable(ws,r,cWF,dat(cWF,sc.wd),{title:'每年情況',grp:true,key:d=>MW.includes(d[0])});
+        /* 「用途」欄：連續相同用途的年度合併成一格 */
+        for(let k=0;k<U.length;){
+          let j=k;while(j+1<U.length&&U[j+1]===U[k])j++;
+          if(U[k]){
+            if(j>k)ws.mergeCells(t.hr+1+k,uc,t.hr+1+j,uc);
+            const c=ws.getCell(t.hr+1+k,uc);c.fill=fill(GR.D.l);c.font={name:FN,size:11,bold:true,color:{argb:X.navy}};c.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+          }
+          k=j+1;
+        }
+        ws.pageSetup.printTitlesRow=(t.hr-1)+':'+t.hr;r=t.next;
+      }
+      ws.views=[{state:'frozen',xSplit:2,ySplit:0,showGridLines:false}];
+      xNote(ws,r,NC,(has('w')?'金色底為「提取」的重點年度。':'')+'「提取後帳戶金額」為該時段最後一次提取的保單年度終結時之提取後退保金額。'+DISC);
+    }
+    /* 情景（匯出時有選擇「悲觀／樂觀情景」才匯出） */
+    if(has('scn')){
+      const d=scnData();
+      if(d.rows.length){
+        ws=wb.addWorksheet(pfx+'悲觀樂觀情景',{views:[{showGridLines:false}]});xInit(ws,'悲觀／樂觀情景｜'+(isWd()?'提取':'不提取'),sub,11,16,X.rose);
+        const f=['c','c','n','n','p','n','n','p','n','n','p'],hc=[null,null,X.rose,X.rose,X.rose,X.navy,X.navy,X.navy,X.teal,X.teal,X.teal];
+        const z=x=>x?[x.sv,x.total,x.irr]:[null,null,null];
+        r=xTable(ws,4,SCH.map((h,i)=>[h.replace('｜','\n'),f[i]]),d.rows.map(q=>['第 '+q.r.y+' 年',q.r.age+' 歲'].concat(z(q.p),z(q.r),z(q.o))),{hc,hh:40,bold:[0]}).next;
+        xNote(ws,r,11,scnNote(d)+DISC);
+      }
+    }
+  }
+  /* list：要匯出的方案編號（schemes 的索引）；多於一個時放在同一個檔案，分頁名稱加上方案編號 */
+  async function xlsx(list){
+    const wb=new ExcelJS.Workbook(),multi=list.length>1,keep=ai,today=new Date().toLocaleDateString('zh-HK');
+    try{list.forEach(i=>{ai=i;xScheme(wb,multi?(i+1)+'. ':'');});}finally{ai=keep;}
+    /* 方案對比：一張總表，每個時間點一組（第一欄合併），各方案上下並列 */
+    const V=variants(),P=cpPts(),A2=byAge(),K=cpMets();
+    if(xp.S.has('cmp')&&V.length>=2&&P.length&&K.length){
+      const nc=K.length+3;
+      const ws=wb.addWorksheet('方案對比');
+      xInit(ws,'方案對比',(A2?'同一年齡':'同一保單年度')+(cpRgLab()?'（'+cpRgLab()+'）':'')+'對比各方案｜製表日期：'+today,nc,16,'FF7C3AED');
+      ws.getColumn(1).width=13;ws.getColumn(2).width=42;ws.getColumn(3).width=12;
+      ws.views=[{state:'frozen',ySplit:4,showGridLines:false}];
+      const mc=[[A2?'年齡':'保單年度','c'],['方案','t'],[A2?'保單年度':'年齡','c']].concat(K.map(m=>[m.n,m.x]));
+      let r=4,first=true;
+      P.forEach(p=>{
+        const rs=V.map(v=>cpRow(v,p));if(rs.every(x=>!x))return;
+        const bc=[null,null,null].concat(K.map(m=>{const ok=rs.map(x=>val(x,m.k)).filter(x=>x!=null);return ok.length>1&&!m.nb?Math.max(...ok):null;}));
+        const t=xTable(ws,r,mc,V.map((v,i)=>[cpLab(p),v.l+'｜'+v.t,rs[i]?cpSub(rs[i]):null].concat(K.map(m=>val(rs[i],m.k)))),{bc,bold:[1],nohead:!first});
+        const r0=t.next-1-V.length,r1=t.next-2;
+        ws.mergeCells(r0,1,r1,1);
+        const c=ws.getCell(r0,1);c.fill=fill(GR.A.l);c.font={name:FN,size:12,bold:true,color:{argb:X.navy}};c.alignment={horizontal:'center',vertical:'middle'};
+        /* 每組上方加粗線分隔 */
+        for(let i=1;i<=nc;i++){const q=ws.getCell(r0,i);q.border=Object.assign({},q.border,{top:{style:'medium',color:{argb:X.navy}}});}
+        r=t.next-1;first=false;
+      });
+      xNote(ws,r+1,nc,'★ 及金色底為同一時間點內該欄的最高值。'+DISC);
+    }
+    const fn=(multi?'方案合集（'+list.length+' 個方案）':(schemes[list[0]].name||'計劃書')).replace(/[\\/:*?"<>|]/g,'_');
+    const buf=await wb.xlsx.writeBuffer(),a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    a.download=fn+'_回報分析.xlsx';document.body.appendChild(a);a.click();a.remove();
+  }
+
+  /* ---------- PDF 匯出 ---------- */
+  /* 做法：把每一頁排成 A4 尺寸的 HTML（畫面外），用 html2canvas 轉成高清圖片，再用 jsPDF 合成 PDF。
+     方案頁為直向；方案對比頁因欄數多，改用橫向。 */
+  const PBAND=['#fde68a','#bae6fd','#e9d5ff','#bbf7d0','#fecdd3','#fed7aa'];
+  const pc=(v,c)=>'<td class="'+(c||'')+'">'+v+'</td>';
+  const pr=(cs,c)=>'<tr class="'+(c||'')+'">'+cs.join('')+'</tr>';
+  /* 一張表（或跨頁後的其中一段）：b = {title, grp:[[名稱,顏色代號,跨欄數]], heads, hc, sm} */
+  const pTbl=(b,rs,part)=>'<div class="pp-sec">'+esc(b.title)+(part?'（續）':'')+'</div><table class="'+(b.sm?'sm':'')+'"><thead>'+
+    (b.grp?'<tr class="g">'+b.grp.map(g=>'<th class="g'+g[1]+'" colspan="'+g[2]+'">'+g[0]+'</th>').join('')+'</tr>':'')+
+    '<tr>'+b.heads.map((h,i)=>'<th class="'+(b.hc?b.hc[i]:'')+'">'+h+'</th>').join('')+'</tr></thead><tbody>'+rs.join('')+'</tbody></table>';
+  /* 自動分頁：B 為內容塊（{h, html} 或表格 {title, heads, rows…}），CAP 為每頁可用高度（px）；表格太長會自動跨頁 */
+  function pFlow(B,CAP){
+    const pages=[],RH=28;let cur=[],left=CAP;
+    const np=()=>{if(cur.length)pages.push(cur.join(''));cur=[];left=CAP;};
+    B.forEach(b=>{
+      if(!b.rows){if(b.h>left)np();cur.push(b.html);left-=b.h;return;}
+      const hd=50+(b.grp?25:0)+31;let k=0,part=0;
+      while(k<b.rows.length){
+        const fit=Math.floor((left-hd)/RH),rem=b.rows.length-k;
+        if(fit<Math.min(3,rem)&&cur.length){np();continue;}
+        const n=Math.max(1,Math.min(fit,rem));
+        cur.push(pTbl(b,b.rows.slice(k,k+n),part++));left-=hd+n*RH;k+=n;
+        if(k<b.rows.length)np();
+      }
+    });
+    np();return pages;
+  }
+  /* 按欄位清單 C（[標題, 分組, 事項, 取格]）及數據 data 砌成一張分組表格 */
+  function pBlk(title,C,data){
+    const G=[];C.forEach(c=>{const L=G[G.length-1];if(L&&L[1]===c[1])L[2]++;else G.push([GN[c[1]],c[1],1]);});
+    return{title,grp:G,heads:C.map(c=>c[0]),hc:C.map(c=>'l'+c[1]),rows:data.map((x,i)=>pr(C.map(c=>c[3](x)),i%2?'z':''))};
+  }
+  /* 目前方案 S() 的內容塊：概覽卡片 → 不提取重點年度 → 提取用途規劃 → 提取重點年度 → 情景（只包含匯出時所選的部分及事項） */
+  function pScheme(){
+    const sc=S(),MB=ms('base'),MW=ms('wd'),g=sc.hasG,lastB=sc.base[sc.base.length-1],pv=Object.values(sc.pf),py=pv.length;
+    const pay=py<=1?'整付':(pv.every(v=>Math.abs(v-pv[0])<1)?'':'平均 ')+fmt(lastB.prem/py)+' × '+py+' 年';
+    const has=k=>xp.S.has(k),pick=L=>L.filter(c=>!c[2]||xp.K.has(c[2]));
+    const K0=[['保單年度','a',null,x=>pc('第 '+x.y+' 年','k')],['年齡','a',null,x=>pc(x.age+' 歲','c')],['已繳保費','a','prem',x=>pc(fmt(x.prem))]];
+    const RC=[['預期收益','c','total',x=>pc(fmt(x.total),'r')],['回報倍數','c','mult',x=>pc(mul(x.mult),'r')],['單利','c','simple',x=>pc(pct(x.simple),'r')],['IRR 複利','c','irr',x=>pc(pct(x.irr),'r')]];
+    const GV=g?[['保證金額','b','gcv',x=>pc(fmt(x.gcv))],['非保證金額','b','ng',x=>pc(fmt(x.ng))]]:[];
+    const B=[];
+    B.push({h:92,html:'<div class="pp-cards">'+[['保單貨幣',sc.cur||'—'],['投保年齡',(sc.base[0].age-sc.base[0].y)+' 歲'],['繳費方式',pay],['已繳總保費',fmt(lastB.prem)],['提取方案合共提取',sc.wd?fmt(sc.wd[sc.wd.length-1].cumW):'—']]
+      .map((q,i)=>'<div class="'+(i>2?'hi':'')+'"><small>'+q[0]+'</small><b>'+esc(q[1])+'</b></div>').join('')+'</div>'});
+    if(has('b'))B.push(pBlk('不提取｜重點年度回報',pick(K0.concat(GV,[['退保發還金額','b','sv',x=>pc(fmt(x.sv),'b')]],RC)),sc.base.filter(x=>MB.includes(x.y))));
+    if(sc.wd&&has('plan')){
+      B.push({title:'提取｜用途規劃',heads:['用途','年齡','保單年度','每年提取','提取年數','合共提取','提取後帳戶金額'],
+        rows:sc.segs.map((s,i)=>{const st=sstat(sc,s);
+          return pr([pc('<span class="pp-use" style="background:'+PBAND[i%PBAND.length]+'">'+esc(s.use)+'</span>'+(s.note?' <small>'+esc(s.note)+'</small>':''),'l'),pc(aLab(st),'c'),pc(yLab(s),'c'),
+            pc((st.uni?'':'平均 ')+fmt(st.avg)),pc(st.n+' 年','c'),pc(fmt(st.t),'b'),pc(fmt(st.bal)+(st.by!=null?' <small>（第 '+st.by+' 年終）</small>':''),'b')],i%2?'z':'');})});
+      B.push({h:50,html:'<div class="pp-bar">'+esc(foot(sc))+'</div>'});
+    }
+    if(sc.wd&&has('w'))B.push(pBlk('提取｜重點年度回報',pick(K0.concat([['當年提取','d','w',x=>pc(x.w>0?fmt(x.w):'—')],['累計提取','d','cumW',x=>pc(fmt(x.cumW))],
+      ['提取後退保金額','b','sv',x=>pc(fmt(x.sv),'b')]],RC)),sc.wd.filter(x=>MW.includes(x.y))));
+    if(has('scn')){
+      const d=scnData();
+      if(d.rows.length){
+        const c3=(x,c)=>x?[pc(fmt(x.sv),c),pc(fmt(x.total),c),pc(pct(x.irr),c)]:[pc('—','c'),pc('—','c'),pc('—','c')];
+        B.push({title:'悲觀／樂觀情景｜'+(isWd()?'提取':'不提取'),sm:true,grp:[['','a',2],['悲觀','p',3],['現時假設','a',3],['樂觀','b',3]],
+          heads:['保單年度','年齡','退保金額','預期收益','IRR','退保金額','預期收益','IRR','退保金額','預期收益','IRR'],
+          hc:['la','la','lp','lp','lp','la','la','la','lb','lb','lb'],
+          rows:d.rows.map((q,i)=>pr([pc('第 '+q.r.y+' 年','k'),pc(q.r.age+' 歲','c')].concat(c3(q.p,'tp'),c3(q.r,'b'),c3(q.o,'tt')),i%2?'z':''))});
+        B.push({h:50,html:'<div class="pp-note">'+esc(scnNote(d))+'</div>'});
+      }
+    }
+    return B;
+  }
+  const pPage=(p,n,N,date)=>'<div class="pp'+(p.ls?' ls':'')+'"><div class="pp-head"><div class="pp-hl"><div class="pp-eye">計劃書回報分析 · RETURN ANALYSIS</div><div class="pp-title">'+esc(p.title)+'</div></div>'+
+    '<div class="pp-date"><small>製表日期</small><b>'+date+'</b>'+(p.sub?'<small>'+esc(p.sub)+'</small>':'')+'</div></div><div class="pp-gold"></div>'+
+    '<div class="pp-body">'+p.body+'</div><div class="pp-foot"><span>＊'+DISC+'</span><span>第 '+n+' / '+N+' 頁</span></div></div>';
+  /* 手機（觸控裝置）開啟分享選單；電腦直接下載 */
+  async function deliver(blob,name,type){
+    try{
+      const f=new File([blob],name,{type});
+      if(window.matchMedia&&matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return;}
+    }catch(e){if(e&&e.name==='AbortError')return;}
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+    toast('✓ 已下載 PDF');
+  }
+  /* list：要匯出的方案編號；多於一個時放在同一個 PDF，每個方案由新一頁開始 */
+  async function pdfOut(list){
+    if(!window.html2canvas||!window.jspdf){toast('PDF 工具尚未載入，請檢查網絡後再試');return;}
+    const btn=$('pdf'),old=btn.textContent,wrap=$('pdfWrap'),keep=ai,multi=list.length>1,date=new Date().toLocaleDateString('zh-HK'),P=[];
+    try{list.forEach(i=>{ai=i;const sc=S();
+      pFlow(pScheme(),915).forEach(b=>P.push({title:(multi?(i+1)+'. ':'')+(sc.name||'方案'),sub:sc.cur?'貨幣：'+sc.cur:'',body:b}));});}finally{ai=keep;}
+    /* 方案對比（橫向）：每個時間點一張表 */
+    const V=variants(),PT=cpPts(),K=cpMets(),A2=byAge();
+    if(xp.S.has('cmp')&&V.length>=2&&PT.length&&K.length){
+      const B=[];
+      PT.forEach(p=>{
+        const rs=V.map(v=>cpRow(v,p));if(rs.every(x=>!x))return;
+        const best={};K.forEach(m=>{const ok=rs.map(x=>val(x,m.k)).filter(x=>x!=null);best[m.k]=ok.length>1&&!m.nb?Math.max(...ok):null;});
+        B.push({title:cpLab(p),sm:K.length>8,heads:['方案',A2?'保單年度':'年齡'].concat(K.map(m=>m.n)),
+          rows:V.map((v,i)=>{const r=rs[i];
+            return pr([pc('<span class="pp-dot" style="background:'+v.c+'"></span>'+esc(v.l)+'｜'+v.t,'l'),pc(r?cpSub(r):'—','c')].concat(
+              K.map(m=>{const x=val(r,m.k),b=best[m.k]!=null&&x===best[m.k];return pc((b?'★ ':'')+(r?m.f(x):'—'),b?'top':'');})),i%2?'z':'');})});
+      });
+      pFlow(B,585).forEach(b=>P.push({ls:true,title:'方案對比',sub:(A2?'同一年齡':'同一保單年度')+(cpRgLab()?'・'+cpRgLab():'')+'｜★ 為該欄最高值',body:b}));
+    }
+    if(!P.length){toast('沒有可匯出的內容');return;}
+    btn.disabled=true;
+    try{
+      let pdf=null;
+      for(let k=0;k<P.length;k++){
+        btn.textContent='生成中 '+(k+1)+'/'+P.length+'…';
+        wrap.innerHTML=pPage(P[k],k+1,P.length,date);
+        const cv=await html2canvas(wrap.firstChild,{scale:2,backgroundColor:'#ffffff',windowWidth:1200});
+        const o=P[k].ls?'landscape':'portrait';
+        if(!pdf)pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4',orientation:o});else pdf.addPage('a4',o);
+        pdf.addImage(cv.toDataURL('image/jpeg',0.92),'JPEG',0,0,P[k].ls?297:210,P[k].ls?210:297);
+      }
+      const fn=(multi?'方案合集（'+list.length+' 個方案）':(schemes[list[0]].name||'計劃書')).replace(/[\\/:*?"<>|]/g,'_');
+      await deliver(pdf.output('blob'),fn+'_回報分析.pdf','application/pdf');
+    }finally{wrap.innerHTML='';btn.disabled=false;btn.textContent=old;}
+  }
+
+  /* ---------- 事件 ---------- */
+  $('file').addEventListener('change',e=>{const f=[...e.target.files];if(f.length)handle(f);e.target.value='';});
+  const dz=$('drop');
+  ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('over');}));
+  ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('over');}));
+  dz.addEventListener('drop',e=>{const f=[...e.dataTransfer.files].filter(x=>/\.pdf$/i.test(x.name));if(f.length)handle(f);});
+  /* 方案切換：第 1 部分的方案列，以及置頂的方案切換列，兩者同步 */
+  const pickS=e=>{const b=e.target.closest('button[data-s]');if(b){ai=+b.dataset.s;render();}};
+  $('sch').addEventListener('click',pickS);$('sch2').addEventListener('click',pickS);
+  $('schDel').onclick=()=>{if(confirm('移除此方案？')){schemes.splice(ai,1);ai=0;$('xlBox').classList.add('hide');render();if(!schemes.length){$('status').className='status';$('status').textContent='尚未上傳檔案。';}}};
+  $('name').addEventListener('change',e=>{S().name=e.target.value;$('xlBox').classList.add('hide');render();});
+  $('mBase').onclick=()=>{mode='base';render();};
+  $('mWd').onclick=()=>{if(S().wd){mode='wd';render();}};
+  $('sl').addEventListener('input',e=>{sel=rows()[+e.target.value].y;render();});
+  /* 顯示事項：點擊加入或移出（同時影響數字卡及表格） */
+  $('itK').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k;
+    if(k==='*')ITEMS.forEach(i=>showK.add(i.k));else if(showK.has(k))showK.delete(k);else showK.add(k);
+    render();});
+  $('vw').addEventListener('click',e=>{const v=e.target.dataset.v;if(v){view=v;table();}});
+  $('msB').addEventListener('change',render);$('msW').addEventListener('change',render);
+  $('tb').addEventListener('click',e=>{const tr=e.target.closest('tr[data-y]');if(tr){sel=+tr.dataset.y;render();}});
+  const cpTitle=n=>(S().name||'儲蓄計劃')+'｜'+(isWd()?'提取':'不提取')+'｜'+n+(S().cur?'（'+S().cur+'）':'');
+  $('tbCopy').onclick=()=>{
+    if(!$('tb').querySelector('tr[data-y]')){alert('沒有可複製的年度。');return;}
+    copyOut(cpTitle(view==='key'?'重點年度回報':'逐年明細'),[{h:null,g:grid($('tb'))}]);
+  };
+  $('pt').addEventListener('change',e=>{const i=e.target.dataset.i,k=e.target.dataset.k;if(i===undefined)return;S().segs[i][k]=e.target.value;});
+  $('pt').addEventListener('click',e=>{const d=e.target.dataset.sp;if(d!==undefined)splitSeg(+d);});
+  $('pAuto').onclick=()=>{autoSegs(S());render();};
+  $('pCopy').onclick=()=>clip(planText());
+  /* 方案對比 */
+  $('cpv').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const c=schemes[+b.dataset.si].cmp;c[b.dataset.k]=!c[b.dataset.k];renderCmp();});
+  $('cpk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k,i=cp.K.indexOf(k);if(i>=0)cp.K.splice(i,1);else cp.K.push(k);renderCmp();});
+  $('cpb').addEventListener('click',e=>{const v=e.target.dataset.v;if(!v||v===cp.by)return;cp.by=v;$('cpp').value=byAge()?'30,40,50,60,65,70,80':'10,20,30,40,50';renderCmp();});
+  $('cpr').addEventListener('click',e=>{const v=e.target.dataset.v;if(!v)return;cp.rg=v;renderCmp();});
+  $('cpl').addEventListener('click',e=>{const v=e.target.dataset.v;if(!v)return;cp.ly=v;renderCmp();});
+  $('cpp').addEventListener('change',renderCmp);
+  $('cpCopy').onclick=()=>{
+    /* 每張表連同它上方的標題一併複製 */
+    const B=[];let h=null;
+    [...$('cpOut').children].forEach(el=>{if(el.classList.contains('cph'))h=el.textContent.replace(/\s+/g,' ').trim();else if(el.classList.contains('tw')){B.push({h,g:grid(el.querySelector('table'))});h=null;}});
+    if(!B.length){alert('沒有可複製的對比內容。');return;}
+    copyOut('方案對比｜'+(byAge()?'同一年齡':'同一保單年度')+(cpRgLab()?'｜'+cpRgLab():''),B,'★ 為各方案中的最高值。');
+  };
+  /* 情景：開啟時自動把「悲觀／樂觀情景」加入匯出部分，隱藏時移出（匯出時仍可自行更改） */
+  $('scT').onclick=()=>{showSc=!showSc;if(showSc)xp.S.add('scn');else xp.S.delete('scn');$('xlBox').classList.add('hide');renderScn();if(showSc)$('scSec').scrollIntoView({behavior:'smooth',block:'start'});};
+  $('scS').addEventListener('click',e=>{const v=e.target.dataset.v;if(v&&!e.target.disabled){scSrc=v;renderScn();}});
+  $('scP').addEventListener('input',renderScn);$('scO').addEventListener('input',renderScn);
+  $('scCopy').onclick=()=>{
+    if(!scnData().rows.length){alert('沒有可複製的情景內容。');return;}
+    copyOut(cpTitle('悲觀／樂觀情景'),[{h:null,g:grid($('sct'))}],scnNote(scnData()));
+  };
+  /* 手動對應 */
+  $('mpOpen').onclick=()=>openMap();
+  $('mpX').onclick=()=>$('mapSec').classList.add('hide');
+  $('mpG').onchange=drawMap;
+  $('mpTb').addEventListener('change',e=>{const c=e.target.dataset.c;if(c!==undefined)pend.G[+$('mpG').value].map[+c]=e.target.value;});
+  $('mpOk').onclick=applyMap;
+  /* 匯出 Excel／PDF：先選擇方案（多於一個時）、要匯出的部分及事項（xpKind 記住今次是匯出哪一種） */
+  let xpKind='xl';
+  const doXl=l=>xlsx(l).catch(e=>alert('匯出失敗：'+e.message));
+  const doPdf=l=>pdfOut(l).catch(e=>alert('匯出失敗：'+e.message));
+  /* 可選的部分：沒有提取方案時不顯示提取相關部分；對比方案不足兩個時不顯示方案對比 */
+  const xpSecs=()=>{const anyW=schemes.some(s=>s.wd),cmpOk=variants().length>=2;
+    return XS.filter(q=>q[0]==='b'||q[0]==='scn'||(q[0]==='cmp'?cmpOk:anyW));};
+  function drawXp(){
+    const anyW=schemes.some(s=>s.wd);
+    $('xpS').innerHTML=xpSecs().map(q=>`<button data-k="${q[0]}" class="${xp.S.has(q[0])?'on':''}">${xp.S.has(q[0])?'✓ ':''}${q[1]}</button>`).join('');
+    $('xpK').innerHTML=ITEMS.filter(i=>!i.wd||anyW).map(i=>`<button data-k="${i.k}" class="${xp.K.has(i.k)?'on':''}">${xp.K.has(i.k)?'✓ ':''}${i.n}</button>`).join('');
+  }
+  const tog=(set,k)=>{if(set.has(k))set.delete(k);else set.add(k);drawXp();};
+  $('xpS').addEventListener('click',e=>{const b=e.target.closest('button');if(b)tog(xp.S,b.dataset.k);});
+  $('xpK').addEventListener('click',e=>{const b=e.target.closest('button');if(b)tog(xp.K,b.dataset.k);});
+  const openExp=k=>{
+    const b=$('xlBox');
+    if(!b.classList.contains('hide')&&xpKind===k){b.classList.add('hide');return;}
+    xpKind=k;$('xlGo').textContent='⬇ 匯出 '+(k==='pdf'?'PDF':'Excel');
+    $('xlSchW').classList.toggle('hide',schemes.length<2);
+    $('xlList').innerHTML=schemes.map((s,i)=>`<label class="ck"><input type="checkbox" value="${i}"${i===ai?' checked':''}> ${i+1}. ${esc(s.name||'方案')}${s.wd?'':'（只有不提取）'}</label>`).join('');
+    drawXp();
+    b.classList.remove('hide');
+  };
+  $('xl').onclick=()=>openExp('xl');
+  $('pdf').onclick=()=>openExp('pdf');
+  $('xlAll').onclick=()=>{$('xlList').querySelectorAll('input').forEach(c=>c.checked=true);XS.forEach(q=>xp.S.add(q[0]));ITEMS.forEach(i=>xp.K.add(i.k));drawXp();};
+  $('xpSame').onclick=()=>{xp.K=new Set(showK);drawXp();toast('已跟隨畫面所選的事項');};
+  $('xlX').onclick=()=>$('xlBox').classList.add('hide');
+  $('xlGo').onclick=()=>{
+    const l=schemes.length<2?[ai]:[...$('xlList').querySelectorAll('input:checked')].map(c=>+c.value).filter(i=>i<schemes.length);
+    if(!l.length){alert('請最少選擇一個方案。');return;}
+    if(!xpSecs().some(q=>xp.S.has(q[0]))){alert('請最少選擇一個要匯出的部分。');return;}
+    $('xlBox').classList.add('hide');(xpKind==='pdf'?doPdf:doXl)(l);
+  };
+  renderScn();
+  </script>
+  </body>
+  </html>
 <script>
 /* ===== 語言切換（繁體／简体）：獨立附加，不改動原有程式 ===== */
 (function(){
